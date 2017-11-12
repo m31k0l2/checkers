@@ -290,7 +290,7 @@ class Game {
 
     fun go(command: String) {
         val moveTemplate = Regex("([a-z]\\d)-([a-z]\\d)")
-        val killTemplate = Regex("([a-z]\\d):([a-z]\\d)")
+        val killTemplate = Regex("([a-z]\\d):([a-z]\\d).*")
         moveTemplate.matchEntire(command)?.let {
             val from = it.groups[1]!!.value
             val to = it.groups[2]!!.value
@@ -298,9 +298,12 @@ class Game {
             return
         }
         killTemplate.matchEntire(command)?.let {
-            val from = it.groups[1]!!.value
-            val to = it.groups[2]!!.value
-            kill(from, to)
+            val positions = it.value.split(":")
+            for (i in 1 until positions.size) {
+                val from = positions[i-1]
+                val to = positions[i]
+                kill(from, to)
+            }
         }
     }
 
