@@ -96,55 +96,10 @@ class CheckersBoard {
     }
 }
 
-class MoveSearcher(val currentColor: Int) {
+class MoveSearcher(private val currentColor: Int, private val board: CheckersBoard) {
     private lateinit var startPosition: BoardPosition
     private var killerType = 0
     private lateinit var victims: List<BoardPosition>
-
-
-}
-
-class Game {
-    private val board = CheckersBoard()
-    var currentColor = 0
-    private lateinit var startPosition: BoardPosition
-    private var killerType = 0
-    private lateinit var victims: List<BoardPosition>
-    init {
-        val whiteCheckers = listOf("a1", "c1", "e1", "g1", "b2", "d2", "f2", "h2", "a3", "c3", "e3", "g3")
-        val blackCheckers = listOf("b8", "d8", "f8", "h8", "a7", "c7", "e7", "g7", "b6", "d6", "f6", "h6")
-        init(whiteCheckers, blackCheckers)
-    }
-
-    fun print() = board.print()
-
-    private fun move(from: String, to: String) {
-        board.move(from, to)
-    }
-
-    private fun kill(from: String, to: String) {
-        val checker = board.get(from)?.checker
-        board.remove(from, to)
-        board.place(to, checker)
-    }
-
-    fun go(command: String) {
-        val moveTemplate = Regex("([a-z]\\d)-([a-z]\\d)")
-        val killTemplate = Regex("([a-z]\\d):([a-z]\\d)")
-        moveTemplate.matchEntire(command)?.let {
-            val from = it.groups[1]!!.value
-            val to = it.groups[2]!!.value
-            move(from, to)
-            return
-        }
-        killTemplate.matchEntire(command)?.let {
-            val from = it.groups[1]!!.value
-            val to = it.groups[2]!!.value
-            kill(from, to)
-        }
-    }
-
-    fun remove(pos: String) = board.remove(pos)
 
     private fun getNextPosition(pos: BoardPosition, dx: Int, dy: Int): BoardPosition? {
         val x = pos.x + dx
@@ -159,9 +114,9 @@ class Game {
             val dy = if (checker.color == 0) 1 else -1
             listOf(-1, 1).mapNotNull { getNextPosition(pos, it, dy) }.takeWhile { it -> board.get(it)?.checker == null }
         } else listOf(listOf(-1, 1), listOf(1, 1), listOf(-1, -1), listOf(1, -1)).map { (dx, dy) ->
-                (1..8).mapNotNull { getNextPosition(pos, dx*it, dy*it) }
+            (1..8).mapNotNull { getNextPosition(pos, dx*it, dy*it) }
                     .takeWhile { it -> board.get(it)?.checker == null }
-            }.flatMap { it }
+        }.flatMap { it }
     }
 
     private fun findNextPositions(killerPosition: BoardPosition, victimPosition: BoardPosition): List<BoardPosition> {
@@ -314,6 +269,49 @@ class Game {
         getKillerMoves(Move(null, null, attackPosition), moves)
         return moves
     }
+}
+
+class Game {
+    private val board = CheckersBoard()
+    var currentColor = 0
+    private lateinit var startPosition: BoardPosition
+    private var killerType = 0
+    private lateinit var victims: List<BoardPosition>
+    init {
+        val whiteCheckers = listOf("a1", "c1", "e1", "g1", "b2", "d2", "f2", "h2", "a3", "c3", "e3", "g3")
+        val blackCheckers = listOf("b8", "d8", "f8", "h8", "a7", "c7", "e7", "g7", "b6", "d6", "f6", "h6")
+        init(whiteCheckers, blackCheckers)
+    }
+
+    fun print() = board.print()
+
+    private fun move(from: String, to: String) {
+        board.move(from, to)
+    }
+
+    private fun kill(from: String, to: String) {
+        val checker = board.get(from)?.checker
+        board.remove(from, to)
+        board.place(to, checker)
+    }
+
+    fun go(command: String) {
+        val moveTemplate = Regex("([a-z]\\d)-([a-z]\\d)")
+        val killTemplate = Regex("([a-z]\\d):([a-z]\\d)")
+        moveTemplate.matchEntire(command)?.let {
+            val from = it.groups[1]!!.value
+            val to = it.groups[2]!!.value
+            move(from, to)
+            return
+        }
+        killTemplate.matchEntire(command)?.let {
+            val from = it.groups[1]!!.value
+            val to = it.groups[2]!!.value
+            kill(from, to)
+        }
+    }
+
+    fun remove(pos: String) = board.remove(pos)
 
     /**
      * Назначает дамку в позиции pos
@@ -330,6 +328,8 @@ class Game {
         whiteCheckers.forEach { board.place(it, BoardChecker(0)) }
         blackCheckers.forEach { board.place(it, BoardChecker(1)) }
     }
+
+    fun nextMoves() = MoveSearcher(currentColor, board).nextMoves()
 }
 
 //todo: поиск хода
