@@ -1,15 +1,15 @@
 fun main(args: Array<String>) {
     val game = Game()
     with(game) {
-        test1()
-        test2()
-        test3()
-        test4()
-        test5()
-        test6()
-        test7()
-        test8()
-        test9()
+//        test1()
+//        test2()
+//        test3()
+//        test4()
+//        test5()
+//        test6()
+//        test7()
+//        test8()
+//        test9()
         test10()
     }
 }
@@ -114,6 +114,9 @@ private fun Game.test9() {
 private fun Game.test10() {
     println("Test 10")
     currentColor = 0
+    val whiteCheckers = listOf("a1", "c1", "e1", "g1", "b2", "d2", "f2", "h2", "g3", "b4", "f4")
+    val blackCheckers = listOf("b8", "d8", "a7", "c7", "b6", "d6", "f6")
+    init(whiteCheckers, blackCheckers)
     print()
     println(nextMoves())
 }

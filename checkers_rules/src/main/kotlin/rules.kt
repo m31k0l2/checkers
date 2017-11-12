@@ -75,10 +75,6 @@ class CheckersBoard {
 
     private fun remove(x: Int, y: Int)= place(x, y, null)
 
-    fun remove(pos: BoardPosition)= place(pos, null)
-
-    fun remove(pos: String)= place(pos, null)
-
     private fun remove(from: BoardPosition, to: BoardPosition) {
         val x1 = Math.min(from.x, to.x)
         val x2 = Math.max(from.x, to.x)
@@ -112,7 +108,7 @@ class MoveSearcher(private val currentColor: Int, private val board: CheckersBoa
         val checker = board.get(pos)!!.checker ?: return null
         return if (checker.type == 0) {
             val dy = if (checker.color == 0) 1 else -1
-            listOf(-1, 1).mapNotNull { getNextPosition(pos, it, dy) }.takeWhile { it -> board.get(it)?.checker == null }
+            listOf(-1, 1).mapNotNull { getNextPosition(pos, it, dy) }.mapNotNull { it -> if (board.get(it)?.checker == null) it else null }
         } else listOf(listOf(-1, 1), listOf(1, 1), listOf(-1, -1), listOf(1, -1)).map { (dx, dy) ->
             (1..8).mapNotNull { getNextPosition(pos, dx*it, dy*it) }
                     .takeWhile { it -> board.get(it)?.checker == null }
