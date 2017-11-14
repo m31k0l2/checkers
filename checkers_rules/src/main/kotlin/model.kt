@@ -37,6 +37,14 @@ class BoardPosition(val x: Int, val y: Int) {
     }
 
     override fun hashCode() = 31 * x + y
+
+    /** Возвращает позицию с приращением dx, dy, если это не возможно, то вернёт null **/
+    fun next(dx: Int, dy: Int): BoardPosition? {
+        val x = x + dx
+        val y = y + dy
+        if (y < 1 || y > 8 || x < 1 || x > 8) return null
+        return BoardPosition(x, y)
+    }
 }
 
 /**

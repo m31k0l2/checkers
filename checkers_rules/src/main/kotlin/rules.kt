@@ -7,18 +7,34 @@ class Game {
         init(whiteCheckers, blackCheckers)
     }
 
+    /**
+     * Отображение доски в консоле
+     */
     fun print() = board.print()
 
+    /**
+     * Перемещение шашки с позиции [from] в позицию [to]
+     */
     private fun move(from: String, to: String) {
         board.move(from, to)
     }
 
+    /**
+     * Атака шашки из позции [from] в позиции [to]
+     *
+     * Удаление атакованных шашек с доски, перемещение атакующей шашки на заданную позицию
+     */
     private fun kill(from: String, to: String) {
         val checker = board.get(from)?.checker
         board.remove(from, to)
         board.place(to, checker)
     }
 
+    /**
+     * Выполнить ход
+     * Ход задаётся командой по шаблону c3-b2 (перемещение шашки с позиции c3 в позицю b2)
+     * или f4:h6:f8:e7 - атака
+     */
     fun go(command: String) {
         val moveTemplate = Regex("([a-z]\\d)-([a-z]\\d)")
         val killTemplate = Regex("([a-z]\\d):([a-z]\\d).*")
