@@ -61,7 +61,7 @@ private fun String.getY() = substring(1, 2).toInt()
  * Описание шашечной доски
  * [board] - список полей доски
  */
-class CheckersBoard {
+class Checkerboard {
     private val board: List<BoardField>
 
     init {
@@ -167,5 +167,21 @@ class CheckersBoard {
      */
     fun clear() {
         board.forEach { it.checker = null }
+    }
+
+    /** Клонирование доски **/
+    fun clone(): Checkerboard {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    /** Преобразует позиции на доске в вектор действительных чисел
+     * Каждое число указывает на ценность шашки, простые шашки стоят 1, а дамки 3
+     * Цвет фигур задаётся знаком
+     */
+    fun encodeToVector() = board.filter { it.color == 1 }.map {
+        val checker = it.checker ?: return@map 0.0
+        if (checker.color == 0 && checker.type == 0) return@map 1.0
+        if (checker.color == 0 && checker.type == 1) return@map 3.0
+        if (checker.color == 1 && checker.type == 0) -1.0 else -3.0
     }
 }

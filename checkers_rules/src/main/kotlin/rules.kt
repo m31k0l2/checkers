@@ -1,10 +1,15 @@
-class Game {
-    private val board = CheckersBoard()
+class Game(initboard: Checkerboard? = null) {
+    private val board: Checkerboard
     var currentColor = 0
+    val checkerboard: Checkerboard
+        get() = board.clone()
+
     init {
-        val whiteCheckers = listOf("a1", "c1", "e1", "g1", "b2", "d2", "f2", "h2", "a3", "c3", "e3", "g3")
-        val blackCheckers = listOf("b8", "d8", "f8", "h8", "a7", "c7", "e7", "g7", "b6", "d6", "f6", "h6")
-        init(whiteCheckers, blackCheckers)
+        board = initboard ?: Checkerboard().also {
+            val whiteCheckers = listOf("a1", "c1", "e1", "g1", "b2", "d2", "f2", "h2", "a3", "c3", "e3", "g3")
+            val blackCheckers = listOf("b8", "d8", "f8", "h8", "a7", "c7", "e7", "g7", "b6", "d6", "f6", "h6")
+            init(whiteCheckers, blackCheckers)
+        }
     }
 
     /**

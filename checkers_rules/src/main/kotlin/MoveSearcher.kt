@@ -5,7 +5,7 @@
  * [startPosition] - переменная в которой содержится информация о стартовой позиции рассматриваемой шашки
  * [killerType] - переменная в которой содержится информация о текущем типе рассматриваемой шашки (шашка или дамка)
  */
-class MoveSearcher(private val currentColor: Int, private val board: CheckersBoard) {
+class MoveSearcher(private val currentColor: Int, private val board: Checkerboard) {
     private lateinit var startPosition: BoardPosition
     private var killerType = 0
     private val victims = board.getCheckers(1 - currentColor)
