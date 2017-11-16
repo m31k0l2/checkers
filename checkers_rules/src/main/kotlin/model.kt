@@ -165,13 +165,17 @@ class Checkerboard {
     /**
      * Убрать все шашки с доски. Достигается обнулением полей
      */
-    fun clear() {
+    private fun clear() {
         board.forEach { it.checker = null }
     }
 
     /** Клонирование доски **/
     fun clone(): Checkerboard {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val clone = Checkerboard()
+        for (field in board) {
+            clone.get(field.x, field.y)?.checker = field.checker
+        }
+        return clone
     }
 
     /** Преобразует позиции на доске в вектор действительных чисел
@@ -183,5 +187,14 @@ class Checkerboard {
         if (checker.color == 0 && checker.type == 0) return@map 1.0
         if (checker.color == 0 && checker.type == 1) return@map 3.0
         if (checker.color == 1 && checker.type == 0) -1.0 else -3.0
+    }
+
+    /**
+     * Инициализация шашек на доске. Для уточнения дамок воспользоваться функцией queen
+     */
+    fun init(whiteCheckers: List<String>, blackCheckers: List<String>) {
+        clear()
+        whiteCheckers.forEach { place(it, BoardChecker(0)) }
+        blackCheckers.forEach { place(it, BoardChecker(1)) }
     }
 }

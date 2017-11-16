@@ -8,7 +8,7 @@ class Game(initboard: Checkerboard? = null) {
         board = initboard ?: Checkerboard().also {
             val whiteCheckers = listOf("a1", "c1", "e1", "g1", "b2", "d2", "f2", "h2", "a3", "c3", "e3", "g3")
             val blackCheckers = listOf("b8", "d8", "f8", "h8", "a7", "c7", "e7", "g7", "b6", "d6", "f6", "h6")
-            init(whiteCheckers, blackCheckers)
+            it.init(whiteCheckers, blackCheckers)
         }
     }
 
@@ -66,14 +66,8 @@ class Game(initboard: Checkerboard? = null) {
         board.get(pos)?.checker?.type = 1
     }
 
-    /**
-     * Инициализация шашек на доске. Для уточнения дамок воспользоваться функцией queen
-     */
-    fun init(whiteCheckers: List<String>, blackCheckers: List<String>) {
-        board.clear()
-        whiteCheckers.forEach { board.place(it, BoardChecker(0)) }
-        blackCheckers.forEach { board.place(it, BoardChecker(1)) }
-    }
-
     fun nextMoves() = MoveSearcher(currentColor, board).nextMoves()
+
+    /** инициализация шашек на доске **/
+    fun init(whiteCheckers: List<String>, blackCheckers: List<String>) = board.init(whiteCheckers, blackCheckers)
 }

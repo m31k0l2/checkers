@@ -1,8 +1,7 @@
 import kotlin.streams.toList
 
 class Player(private val nw: Network, private val predicateMoves: Int = 4, private val debug: Boolean = false) {
-
-    fun selectStep(checkerboard: Checkerboard, color: Int, steps: List<String>): String {
+    fun selectMove(checkerboard: Checkerboard, color: Int, steps: List<String>): String {
         return steps.parallelStream().map { it to play(checkerboard, color, predicateMoves, it) }.toList()
                 .onEach { if (debug) println(it) }
                 .maxBy { it.second }!!.first
@@ -19,7 +18,7 @@ class Player(private val nw: Network, private val predicateMoves: Int = 4, priva
             command to o[0]
         }
         return (if (color == 0) {
-            list.maxBy { it.second }!!.first
+            list.maxBy { it -> it.second }!!.first
         } else list.minBy { it.second }!!.first)
     }
 

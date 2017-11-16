@@ -22,7 +22,7 @@ class Neuron {
 }
 
 class Layer(size: Int=0) {
-    val neurons = List(size, { Neuron() })
+    val neurons = MutableList(size, { Neuron() })
     fun activate(input: List<Double>) = neurons.map { it.activate(input) }
 }
 
@@ -33,6 +33,24 @@ class Network(vararg layerSize: Int) {
         var y = input
         // последовательно активируем все слои
         for (i in 0 until layers.size) {
+            y = layers[i].activate(y)
+        }
+        return y
+    }
+
+    fun multiActivate(x: List<List<Double>>): List<Double> {
+        synchronized(this) {
+            layers[0].neurons.apply {
+                if (size != x.size) {
+                    clear()
+                    addAll(List(x.size, { Neuron() }))
+                }
+            }
+        }
+        var y = layers[0].neurons.mapIndexed { i, neuron ->
+            neuron.activate(x[i])
+        }
+        for (i in 1 until layers.size) {
             y = layers[i].activate(y)
         }
         return y
