@@ -57,5 +57,6 @@ class EvolutionXOR(populationSize: Int, scale: Int): AbstractEvolution(populatio
 fun main(args: Array<String>) {
     val evolution = EvolutionXOR(30, 10)
     val nw = evolution.evolute(500).nw
+    NetworkIO().save(nw, "test.net")
     evolution.test(nw)
 }

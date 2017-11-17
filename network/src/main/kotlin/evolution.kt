@@ -42,11 +42,16 @@ abstract class AbstractEvolution(
     open fun evolute(epochSize: Int): Individual {
         var population = generatePopulation(populationSize)
         for (i in 0 until epochSize) {
+            println("эпоха $i")
+            val start = System.nanoTime()
             population = competition(population)
             population = nextGeneration(population) // генерируем следующее поколение особей
             // случайным образом регулируем эволюцию для следующего поколения
             mutantRate = random.nextDouble() * 0.5 // в пределах [0; 0.5]
             crossoverRate = random.nextDouble() // -//- [0; 1.0]
+            val fin = System.nanoTime()
+            println(population.map { it.rate })
+            println("Время: ${(fin-start)/1_000_000} мс\n")
         }
         return population.first()
     }
