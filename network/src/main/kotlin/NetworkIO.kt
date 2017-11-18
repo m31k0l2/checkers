@@ -1,18 +1,48 @@
-import com.google.gson.Gson
 import java.io.File
+import java.io.FileReader
+import java.io.FileWriter
 
 class NetworkIO {
-    private val gson = Gson()
-
-    fun save(nw: Network, fname: String) {
-        val json = gson.toJson(nw)
-        File(fname).writeText(json)
+    fun save(nw: Network, name: String) {
+        val file = FileWriter(File(name))
+        nw.layers.forEach {
+            file.write("layer\n")
+            it.neurons.forEach {
+                file.write("neuron\n")
+                it.weights.forEach { file.write("$it\n") }
+            }
+        }
+        file.write("end")
+        file.close()
     }
 
-    fun load(fname: String): Network? {
-        val f = File(fname)
+    fun load(name: String): Network? {
+        val f = File(name)
         if (!f.exists()) return null
-        val json = f.readText()
-        return gson.fromJson(json, Network::class.java)
+        val file = FileReader(f)
+        val lines = file.readLines()
+        file.close()
+        val nw = Network()
+        var layer: Layer? = null
+        var neuron: Neuron? = null
+        lines.forEach { line ->
+            if (line == "layer") {
+                layer?.let {
+                    it.neurons.add(neuron!!)
+                    nw.layers.add(it)
+                    neuron = null
+                }
+                layer = Layer()
+            } else if (line == "neuron") {
+                neuron?.let { layer!!.neurons.add(it) }
+                neuron = Neuron()
+            } else if (line == "end") {
+                layer!!.neurons.add(neuron!!)
+                nw.layers.add(layer!!)
+            } else {
+                neuron!!.weights.add(line.toDouble())
+            }
+        }
+        return nw
     }
 }

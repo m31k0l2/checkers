@@ -6,7 +6,7 @@
  * [killerType] - переменная в которой содержится информация о текущем типе рассматриваемой шашки (шашка или дамка)
  */
 class MoveSearcher(private val currentColor: Int, private val board: Checkerboard) {
-    private lateinit var startPosition: BoardPosition
+    private lateinit var startPosition: Position
     private var killerType = 0
     private val victims = board.getCheckers(1 - currentColor)
 
@@ -15,13 +15,13 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
      * Каждое следующее перемещение хранит историю предыдущего перемещения.
      * Реализивано по типу связного списка.
      */
-    data class Move(private val from: Move?, private val victim: BoardPosition?, val to: BoardPosition) {
+    data class Move(private val from: Move?, private val victim: Position?, val to: Position) {
         /**
          * Преобразует связный список Move в список позиций перемещений хода, следующего вида
          * [f4, h6, f8, d6], что означает с f4 переход на h6, с h6 на f8 и т.д.
          */
-        fun toList(): List<BoardPosition> {
-            val list = mutableListOf<BoardPosition>()
+        fun toList(): List<Position> {
+            val list = mutableListOf<Position>()
             list.add(to)
             var move = from
             while (true) {
@@ -40,8 +40,8 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
          * а также о снятых шашек, то для поиска всех битых шашек надо просто в цикле отмотать ходы до первого и собрать
          * эту информацию в список victims
          */
-        fun getVictims(): List<BoardPosition> {
-            val victims = mutableListOf<BoardPosition>()
+        fun getVictims(): List<Position> {
+            val victims = mutableListOf<Position>()
             var curMove = this
             while (true) {
                 curMove.victim?.let { victims.add(it) }
@@ -71,13 +71,13 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
     /**
      * Получает список атакующих позиций для каждого атакующего хода для шашки с позициец [checkerPosition]
      */
-    private fun getAttackPositionsList(checkerPosition: BoardPosition) =
+    private fun getAttackPositionsList(checkerPosition: Position) =
             getKillerMoves(checkerPosition).mapNotNull { it.toList().takeIf { it.size > 1 } }
 
     /**
      * Функция обёртка, возвращает список атакующих ходов для позицией
      */
-    private fun getKillerMoves(attackPosition: BoardPosition): List<Move> {
+    private fun getKillerMoves(attackPosition: Position): List<Move> {
         val moves = mutableListOf<Move>()
         getKillerMoves(Move(null, null, attackPosition), moves)
         return moves
@@ -125,7 +125,7 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
      * Для каждой шашки, находящейся под ударом, находим список позиций, куда может перемещаться атакующая шашка
      * Затем из этого списка получаем атаки класса Move
      */
-    private fun nextStepsForMove(move: Move, nearbyVictims: List<BoardPosition>, killed: List<BoardPosition>) =
+    private fun nextStepsForMove(move: Move, nearbyVictims: List<Position>, killed: List<Position>) =
             nearbyVictims.mapNotNull { victim ->
                 getAfterAttackPositions(move.to, victim, killed)?.map { Move(move, victim, it) }
         }.flatMap { it }
@@ -135,7 +135,7 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
      * [victim] - позиция атакуемой шашки
      * [killed] - список битых шашек в течении хода
      */
-    private fun getAfterAttackPositions(killer: BoardPosition, victim: BoardPosition, killed: List<BoardPosition>): List<BoardPosition>? {
+    private fun getAfterAttackPositions(killer: Position, victim: Position, killed: List<Position>): List<Position>? {
         if (killed.any { isBetween(it, killer, victim) }) return null
         // находим список возможных позиций после атаки
         val nextPositions = findNextPositions(killer, victim).takeWhile {
@@ -154,7 +154,7 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
     }
 
     /** Находит позиции шашки после атаки **/
-    private fun findNextPositions(killerPosition: BoardPosition, victimPosition: BoardPosition): List<BoardPosition> {
+    private fun findNextPositions(killerPosition: Position, victimPosition: Position): List<Position> {
         if (killerType == 0) { // если простая шашка
             findNextPositionForSimpleChecker(killerPosition, victimPosition)?.let { return listOf(it) }
             return emptyList()
@@ -171,7 +171,7 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
      * иначе бы не прошёл фильтр по пустоте поля (т.к. поле ещё не обнулено), или если на поле за атакованной шашкой
      * есть другая шашка то вернуть пустой список иначе список с позицией
      */
-    private fun findNextPositionForSimpleChecker(killerPosition: BoardPosition, victimPosition: BoardPosition): BoardPosition? {
+    private fun findNextPositionForSimpleChecker(killerPosition: Position, victimPosition: Position): Position? {
         val dx = victimPosition.x - killerPosition.x
         val dy = victimPosition.y - killerPosition.y
         val to = killerPosition.next(2 * dx, 2 * dy) ?: return null
@@ -183,7 +183,7 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
      * [killerPosition] - атакующая позиция
      * [victimPosition] - атакуемая позиция
      */
-    private fun findNextPositionsForQueen(killerPosition: BoardPosition, victimPosition: BoardPosition): List<BoardPosition> {
+    private fun findNextPositionsForQueen(killerPosition: Position, victimPosition: Position): List<Position> {
         var dx = victimPosition.x - killerPosition.x
         var dy = victimPosition.y - killerPosition.y
         return (1..8).mapNotNull {
@@ -197,10 +197,10 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
      * Возвращает список позиций шашек которые можно взять
      * Шашки фильтруются по принципу, не содержатся в битых на этом ходе и за и перед ней пустое поле
      */
-    private fun getNearbyVictims(killerPosition: BoardPosition, killed: List<BoardPosition>) =
+    private fun getNearbyVictims(killerPosition: Position, killed: List<Position>) =
             findVictims(victims, killerPosition).filter { !killed.contains(it) }.filter { checkChecker(killerPosition, it) }
 
-    private fun isCheckersBetween(a: BoardPosition, b: BoardPosition): Boolean {
+    private fun isCheckersBetween(a: Position, b: Position): Boolean {
         val dx = 1.takeIf { a.x - b.x < 0 } ?: -1
         val dy = 1.takeIf { a.y - b.y < 0 } ?: -1
         val x1 = Math.min(a.x, b.x)+1
@@ -208,7 +208,7 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
         val y1 = Math.min(a.y, b.y)+1
         val y2 = Math.max(a.y, b.y)-1
         return (1 until 8)
-                .map { BoardPosition(a.x + dx * it, a.y + dy * it) }
+                .map { Position(a.x + dx * it, a.y + dy * it) }
                 .takeWhile { (Math.abs(it.x) in (x1..x2) && Math.abs(it.y) in (y1..y2)) }
                 .mapNotNull { board.get(it)?.checker }
                 .any()
@@ -218,7 +218,7 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
      * Для шашки - это рядом стоящая шашка
      * Для дамки - это шашки на одной диагонали
      **/
-    private fun findVictims(victims: List<BoardPosition>, killerPosition: BoardPosition) = when (killerType) {
+    private fun findVictims(victims: List<Position>, killerPosition: Position) = when (killerType) {
         0 -> victims.filter { Math.abs(killerPosition.x - it.x) == 1 && Math.abs(killerPosition.y - it.y) == 1 }
         else -> victims.filter { isOneDiagonal(killerPosition, it) }
     }
@@ -226,15 +226,15 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
     /**
      * Проверка что шашка с позиции Killer может взять шашку с позицией victim, проверка, что нет шашек до и после victim
      */
-    private fun checkChecker(killer: BoardPosition, victim: BoardPosition) = with(victim) {
+    private fun checkChecker(killer: Position, victim: Position) = with(victim) {
         val dx = x - killer.x
         val dy = y - killer.y
         val xAfter = x + if (dx < 0) 1 else -1
         val yAfter = y + if (dy < 0) 1 else -1
         val xBefore = x + if (dx < 0) -1 else 1
         val yBefore = y + if (dy < 0) -1 else 1
-        val after = BoardPosition(xAfter, yAfter)
-        val before = BoardPosition(xBefore, yBefore)
+        val after = Position(xAfter, yAfter)
+        val before = Position(xBefore, yBefore)
         val checkerAfter = board.get(after)?.checker
         val checkerBefore = board.get(before)?.checker
         (after == startPosition || checkerAfter == null) && (before == killer || checkerBefore == null)
@@ -243,10 +243,10 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
     /**
      * Проверка, что шашки с позицией [pos1] и с позицией [pos2] на одной диагонали
      */
-    private fun isOneDiagonal(pos1: BoardPosition, pos2: BoardPosition) = Math.abs(pos1.x - pos2.x) == Math.abs(pos1.y - pos2.y)
+    private fun isOneDiagonal(pos1: Position, pos2: Position) = Math.abs(pos1.x - pos2.x) == Math.abs(pos1.y - pos2.y)
 
     /** Проверка, что шашка с позицией [pos] надодится между шашками с позициями [a] и [b] */
-    private fun isBetween(pos: BoardPosition, a: BoardPosition, b: BoardPosition): Boolean {
+    private fun isBetween(pos: Position, a: Position, b: Position): Boolean {
         if (!isOneDiagonal(pos, a) || !isOneDiagonal(pos, b) || !isOneDiagonal(a, b)) return false
         val dAB = Math.abs(b.x - a.x)
         val dA = Math.abs(pos.x - a.x)
@@ -264,7 +264,7 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
      * Для шашки - это соседние клетки, на которых не других шашек
      * Для дамки - это две её диагонали, ходы берутся до тех пор, пока не будет встречена занятая клетка
      **/
-    private fun findMoveWay(pos: BoardPosition): List<BoardPosition>? {
+    private fun findMoveWay(pos: Position): List<Position>? {
         val checker = board.get(pos)!!.checker ?: return null
         return if (checker.type == 0) {
             val dy = if (checker.color == 0) 1 else -1

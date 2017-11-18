@@ -35,25 +35,27 @@ abstract class AbstractEvolution(
      * Запуск эволюции.
      * [epochSize] - количество поколений которые участвуют в эволюции (эпох).
      * Создаём популяцию размером populationSize
-     * Для каждой эпохи среди популяции проводим соревнование
+     * Выполняем эволюцию популяци от эпохи к эпохе
+     */
+    fun evolute(epochSize: Int): Individual {
+        var population = generatePopulation(populationSize)
+        (0 until epochSize).forEach { population = evoluteEpoch(population) }
+        return population.first()
+    }
+
+    /**
+     * эволюция популяции за одну эпоху
+     * среди популяции проводим соревнование
      * По итогам генерируется новое поколение для следующей эпохи
      * Условия размножения (mutantRate и crossoverRate) изменяются от эпохи к эпахе
-     */
-    open fun evolute(epochSize: Int): Individual {
-        var population = generatePopulation(populationSize)
-        for (i in 0 until epochSize) {
-            println("эпоха $i")
-            val start = System.nanoTime()
-            population = competition(population)
-            population = nextGeneration(population) // генерируем следующее поколение особей
-            // случайным образом регулируем эволюцию для следующего поколения
-            mutantRate = random.nextDouble() * 0.5 // в пределах [0; 0.5]
-            crossoverRate = random.nextDouble() // -//- [0; 1.0]
-            val fin = System.nanoTime()
-            println(population.map { it.rate })
-            println("Время: ${(fin-start)/1_000_000} мс\n")
-        }
-        return population.first()
+     **/
+    open fun evoluteEpoch(initPopulation: List<Individual>): List<Individual> {
+        var population = competition(initPopulation)
+        population = nextGeneration(population) // генерируем следующее поколение особей
+        // случайным образом регулируем эволюцию для следующего поколения
+        mutantRate = random.nextDouble() * 0.5 // в пределах [0; 0.5]
+        crossoverRate = random.nextDouble() // -//- [0; 1.0]
+        return population
     }
 
     /**

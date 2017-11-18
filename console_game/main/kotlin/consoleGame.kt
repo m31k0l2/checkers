@@ -5,6 +5,8 @@ fun main(args: Array<String>) {
     val scanner = Scanner(System.`in`)
     var moves: List<String>
     val humanColor = 0
+    val nw = NetworkIO().load("best.net")!!
+    val player = Player(nw)
     while (true) {
         game.print()
         if (game.currentColor == 0) {
@@ -31,8 +33,11 @@ fun main(args: Array<String>) {
                 }
             }
         } else {
-            val step = Random().nextInt(moves.size) + 1
-            game.go(moves[step - 1])
+            println("board clone")
+            val board = game.checkerboard
+            val step = player.selectMove(game.checkerboard, game.currentColor, moves)
+            Game(board).print()
+            game.go(step)
         }
         game.currentColor = 1 - game.currentColor
     }

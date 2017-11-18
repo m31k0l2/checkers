@@ -8,20 +8,20 @@
  * [color] = 1 - чёрный цвет, 0 - белый
  * [type] = 0 - шашка, 1 - дамка
  */
-data class BoardChecker(val color: Int, var type: Int=0)
+data class Checker(val color: Int, var type: Int=0)
 
 /** Описание поля доски
  * [x], [y] - координаты поля
  * [color] = 1 - чёрный цвет, 0 - белый
  * [checker] - если null, то поле пустое, иначе на поле располагается шашка
  */
-data class BoardField(val x: Int, val y: Int, val color: Int, var checker: BoardChecker? = null)
+data class Field(val x: Int, val y: Int, val color: Int, var checker: Checker? = null)
 
 /**
  * Другое задание координат
  * Автоматические преобразует координаты в запись принятую в русских шашках (a1, c1, ...) и обратно
  */
-class BoardPosition(val x: Int, val y: Int) {
+class Position(val x: Int, val y: Int) {
     constructor(s: String) : this(s.getX(), s.getY())
 
     override fun toString(): String {
@@ -32,18 +32,18 @@ class BoardPosition(val x: Int, val y: Int) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-        other as BoardPosition
+        other as Position
         return x == other.x && y == other.y
     }
 
     override fun hashCode() = 31 * x + y
 
     /** Возвращает позицию с приращением dx, dy, если это не возможно, то вернёт null **/
-    fun next(dx: Int, dy: Int): BoardPosition? {
+    fun next(dx: Int, dy: Int): Position? {
         val x = x + dx
         val y = y + dy
         if (y < 1 || y > 8 || x < 1 || x > 8) return null
-        return BoardPosition(x, y)
+        return Position(x, y)
     }
 }
 
@@ -62,10 +62,10 @@ private fun String.getY() = substring(1, 2).toInt()
  * [board] - список полей доски
  */
 class Checkerboard {
-    private val board: List<BoardField>
+    val board: List<Field>
 
     init {
-        board = (1..8).flatMap { y -> (1..8).map { x -> BoardField(x, y, (x + y + 1) % 2 ) } }
+        board = (1..8).flatMap { y -> (1..8).map { x -> Field(x, y, (x + y + 1) % 2 ) } }
     }
 
     /**
@@ -76,12 +76,12 @@ class Checkerboard {
     /**
      * Получить конкретное поле по переданной позиции
      */
-    fun get(pos: BoardPosition) = get(pos.x, pos.y)
+    fun get(pos: Position) = get(pos.x, pos.y)
 
     /**
      * Получить конкретное поле через текстовое выражение
      */
-    fun get(pos: String) = get(BoardPosition(pos))
+    fun get(pos: String) = get(Position(pos))
 
     /**
      * Текстовое отображение доски
@@ -110,7 +110,7 @@ class Checkerboard {
     /**
      * Размещает шашку [checker] в поле с координатами [x], [y]
      */
-    private fun place(x: Int, y: Int, checker: BoardChecker?) {
+    private fun place(x: Int, y: Int, checker: Checker?) {
         if (checker?.type == 0 && ((y == 8 && checker.color == 0) || (y == 1 && checker.color == 1))) checker.type = 1
         get(x, y)!!.checker = checker
     }
@@ -118,12 +118,12 @@ class Checkerboard {
     /**
      * Размещает шашку [checker] в поле с позицией [pos]
      */
-    private fun place(pos: BoardPosition, checker: BoardChecker?) = place(pos.x, pos.y, checker)
+    private fun place(pos: Position, checker: Checker?) = place(pos.x, pos.y, checker)
 
     /**
      * Размещает шашку [checker] в поле с позицией [pos], заданной текстовым представлением
      */
-    fun place(pos: String, checker: BoardChecker?) = place(BoardPosition(pos), checker)
+    fun place(pos: String, checker: Checker?) = place(Position(pos), checker)
 
     /**
      * Переместить содержимое поле [from] в поле [to], поля задаются текстовым представлением
@@ -142,7 +142,7 @@ class Checkerboard {
     /**
      * Обнулить содержимое полей на диагонали между полями в позиции [from] и в позиции [to] включительно
      */
-    private fun remove(from: BoardPosition, to: BoardPosition) {
+    private fun remove(from: Position, to: Position) {
         val x1 = Math.min(from.x, to.x)
         val x2 = Math.max(from.x, to.x)
         val y1 = Math.min(from.y, to.y)
@@ -154,13 +154,13 @@ class Checkerboard {
      * Обнулить содержимое полей на диагонали между полями в позиции [from] и в позиции [to] включительно.
      * Позиции заданы текстовыми представлениями
      */
-    fun remove(from: String, to: String) = remove(BoardPosition(from), BoardPosition(to))
+    fun remove(from: String, to: String) = remove(Position(from), Position(to))
 
     /**
      * Получить список позиций шашек на доске цвета [color]
      */
     fun getCheckers(color: Int) = board.filter {
-        it.checker != null && it.checker!!.color == color }.map { BoardPosition(it.x, it.y) }
+        it.checker != null && it.checker!!.color == color }.map { Position(it.x, it.y) }
 
     /**
      * Убрать все шашки с доски. Достигается обнулением полей
@@ -173,7 +173,8 @@ class Checkerboard {
     fun clone(): Checkerboard {
         val clone = Checkerboard()
         for (field in board) {
-            clone.get(field.x, field.y)?.checker = field.checker
+            val checker = field.checker
+            clone.get(field.x, field.y)?.checker = if (checker == null) null else Checker(checker.color, checker.type)
         }
         return clone
     }
@@ -194,7 +195,7 @@ class Checkerboard {
      */
     fun init(whiteCheckers: List<String>, blackCheckers: List<String>) {
         clear()
-        whiteCheckers.forEach { place(it, BoardChecker(0)) }
-        blackCheckers.forEach { place(it, BoardChecker(1)) }
+        whiteCheckers.forEach { place(it, Checker(0)) }
+        blackCheckers.forEach { place(it, Checker(1)) }
     }
 }

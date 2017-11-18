@@ -27,7 +27,7 @@ class Layer(size: Int=0) {
 }
 
 class Network(vararg layerSize: Int) {
-    val layers = List(layerSize.size, { i -> Layer(layerSize[i]) })
+    val layers = MutableList(layerSize.size, { i -> Layer(layerSize[i]) })
 
     fun activate(input: List<Double>): List<Double> {
         var y = input
@@ -64,5 +64,4 @@ fun main(args: Array<String>) {
     NetworkIO().load("network2.net")?.let {
         println(it.activate(listOf(1.0, 1.0)))
     }
-
 }
