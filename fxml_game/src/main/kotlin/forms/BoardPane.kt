@@ -16,7 +16,7 @@ class BoardPane : Pane() {
 
     fun init(orientation: Int) {
         model = BoardModel(this)
-        model.agentColor = 1 - orientation
+        model.botColor = 1 - orientation
         children.removeAll(children.filter { it is Text })
         val checkerboard = Game().checkerboard
         checkerboard.board.filter { it.color == 1 }.map { Position(it.x, it.y) }.forEach { pos ->

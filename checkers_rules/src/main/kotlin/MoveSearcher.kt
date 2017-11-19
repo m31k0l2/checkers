@@ -125,10 +125,14 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
      * Для каждой шашки, находящейся под ударом, находим список позиций, куда может перемещаться атакующая шашка
      * Затем из этого списка получаем атаки класса Move
      */
-    private fun nextStepsForMove(move: Move, nearbyVictims: List<Position>, killed: List<Position>) =
-            nearbyVictims.mapNotNull { victim ->
-                getAfterAttackPositions(move.to, victim, killed)?.map { Move(move, victim, it) }
-        }.flatMap { it }
+    private fun nextStepsForMove(move: Move, nearbyVictims: List<Position>, killed: List<Position>): List<Move> {
+        val moves = mutableListOf<Move>()
+        for (victim in nearbyVictims) {
+            val positions = getAfterAttackPositions(move.to, victim, killed) ?: continue
+            moves.addAll(positions.map { Move(move, victim, it) })
+        }
+        return moves
+    }
 
     /** Находит позиции после атаки, проверяет атаки на соответствие правилам, исключает позици, которые нарушают правила
      * [killer] - позиция атакующей шашки
@@ -140,7 +144,7 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
         // находим список возможных позиций после атаки
         val nextPositions = findNextPositions(killer, victim).takeWhile {
             // правило: за битой шашкой должно быть свободное поле
-            board.get(it)?.checker?.color != currentColor || it == startPosition
+            board.get(it)?.checker == null || it == startPosition
         }
         // если атакующую шашку после нападения некуда ставить, то шашку нельзя атаковать
         if (nextPositions.isEmpty()) return null
@@ -184,13 +188,9 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
      * [victimPosition] - атакуемая позиция
      */
     private fun findNextPositionsForQueen(killerPosition: Position, victimPosition: Position): List<Position> {
-        var dx = victimPosition.x - killerPosition.x
-        var dy = victimPosition.y - killerPosition.y
-        return (1..8).mapNotNull {
-            dx = if (dx < 0) dx-- else dx++
-            dy = if (dy < 0) dy-- else dy++
-            killerPosition.next(dx, dy)
-        }
+        val dx = if (victimPosition.x - killerPosition.x < 0) -1 else 1
+        val dy = if (victimPosition.y - killerPosition.y < 0) -1 else 1
+        return (1..8).mapNotNull { victimPosition.next(it * dx, it * dy) }
     }
 
     /**
@@ -224,15 +224,17 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
     }
 
     /**
-     * Проверка что шашка с позиции Killer может взять шашку с позицией victim, проверка, что нет шашек до и после victim
+     * Проверка, что шашка с позиции Killer может взять шашку с позицией victim, проверка, что нет шашек до и после victim
+     * проверка, что шашка не у края
      */
     private fun checkChecker(killer: Position, victim: Position) = with(victim) {
         val dx = x - killer.x
         val dy = y - killer.y
-        val xAfter = x + if (dx < 0) 1 else -1
-        val yAfter = y + if (dy < 0) 1 else -1
-        val xBefore = x + if (dx < 0) -1 else 1
-        val yBefore = y + if (dy < 0) -1 else 1
+        val xAfter = x + if (dx < 0) -1 else 1
+        val yAfter = y + if (dy < 0) -1 else 1
+        val xBefore = x + if (dx < 0) 1 else -1
+        val yBefore = y + if (dy < 0) 1 else -1
+        if (!(xBefore in (1..8) && yBefore in (1..8) && xAfter in (1..8) && yAfter in (1..8))) return false
         val after = Position(xAfter, yAfter)
         val before = Position(xBefore, yBefore)
         val checkerAfter = board.get(after)?.checker

@@ -58,8 +58,8 @@ class EvolutionCheckers(populationSize: Int, scale: Int, private val maxSteps: I
 }
 
 fun main(args: Array<String>) {
-    with(EvolutionCheckers(20, 5, 20)) {
-        val nw = evolute(20).nw
+    with(EvolutionCheckers(10, 5, 20)) {
+        val nw = evolute(10).nw
         saveNets()
         NetworkIO().save(nw, "best.net")
     }

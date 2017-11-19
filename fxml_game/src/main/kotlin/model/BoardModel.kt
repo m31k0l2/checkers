@@ -10,28 +10,27 @@ import javafx.scene.text.Text
 import javafx.util.Duration
 
 
-class BoardModel(val desk: BoardPane) {
+class BoardModel(private val desk: BoardPane) {
     val fields = mutableMapOf<String, BoardField>()
     val checkers = mutableMapOf<String, BoardChecker>()
-    var currentPlayerColor = 0
-    var agentColor = 1
+    var botColor = 1
     var game = Game()
-    var availableSteps: List<String>
     var activeFields: Set<String>
     var availableMoveFields: Set<String>? = null
     var from: String? = null
     var stepCounter = 0.0
-    val stepLimit = 50
-    val agent = Player(NetworkIO().load("best.net")!!, 2)
+    private val stepLimit = 50
+    private val agent = Player(NetworkIO().load("best.net")!!, 2)
     var animationClose = false
+    private var moves: List<String>
 
     init {
-        availableSteps = game.nextMoves()
+        moves = game.nextMoves()
         activeFields = extractActiveFields()
     }
 
     fun onClicked(position: Position) {
-        if (currentPlayerColor == agentColor) return
+        if (game.currentColor == botColor) return
         // снять выделение
         clearSelected()
         // пометить доступные для хода фигура
@@ -61,14 +60,14 @@ class BoardModel(val desk: BoardPane) {
     fun agentStep() {
         Thread(Runnable {
             Thread.sleep(600L)
-            val step = agent.selectMove(game.checkerboard, currentPlayerColor, availableSteps)
+            val step = agent.selectMove(game.checkerboard, game.currentColor, moves)
             Platform.runLater({
                 nextStep(step)
             })
         }).start()
     }
 
-    fun nextStep(command: String) {
+    private fun nextStep(command: String) {
         animationClose = false
         if (stepCounter.toInt() == stepLimit) {
             win(-1)
@@ -76,22 +75,18 @@ class BoardModel(val desk: BoardPane) {
         }
         stepCounter += 0.5
         game.go(command)
+        println("${game.currentColor}: $command")
+        game.print()
         showTrack(command)
         // перевести ход на соперника
-        currentPlayerColor = 1 - currentPlayerColor
-        game.currentColor = currentPlayerColor
-        availableSteps = game.nextMoves()
-        if (availableSteps.isEmpty()) {
+        game.currentColor = 1 - game.currentColor
+        moves = game.nextMoves()
+        if (moves.isEmpty()) {
             win(1 - game.currentColor)
-        }
-        activeFields = extractActiveFields()
-        if (availableSteps.isEmpty()) {
-            win(1 - currentPlayerColor)
-        }
-        game.print()
+        } else activeFields = extractActiveFields()
     }
 
-    fun showTrack(command: String) {
+    private fun showTrack(command: String) {
         val positions = if (command.contains("-")) command.split("-")
         else command.split(":")
         val path = Path()
@@ -122,11 +117,12 @@ class BoardModel(val desk: BoardPane) {
         }
     }
 
-    fun win(color: Int) {
+    /** Отобразить победителя **/
+    private fun win(color: Int) {
         val text: String
         if (color > -1) {
-            if (color == 0) text = "   Белые\nпобедили"
-            else text = " Черные\nпобедили"
+            text = if (color == 0) "   Белые\nпобедили"
+            else " Черные\nпобедили"
             fields.forEach { _, boardField -> boardField.onMouseClicked = null }
         } else {
             text = "\n  ничья"
@@ -135,14 +131,16 @@ class BoardModel(val desk: BoardPane) {
         clearSelected()
     }
 
-    fun clearSelected() = fields.values.forEach { it.fill(Color.BURLYWOOD) }
+    /** Очистить выделение полей на доске **/
+    private fun clearSelected() = fields.values.forEach { it.fill(Color.BURLYWOOD) }
 
+    /** Отобразить состояние доски **/
     private fun checkerBoardUpdate() {
         fields.forEach { pos, boardField ->
             val field = game.checkerboard.get(pos)!!
             field.checker?.let { (color, type) ->
                 val queen = type == 1
-                boardField.checker?.let {  boardChecker ->
+                boardField.checker?.let { boardChecker ->
                     if (boardChecker.color != color && boardChecker.isQueen != queen) {
                         boardField.checker = BoardChecker(Position(pos), color, queen, boardField.orientation)
                     }
@@ -155,13 +153,15 @@ class BoardModel(val desk: BoardPane) {
         }
     }
 
-    private fun extractActiveFields() = availableSteps.map { it.substring(0, 2) }.toSet()
+    /** Возвращает список позиций шашек, которые могут ходить **/
+    private fun extractActiveFields() = moves.map { it.substring(0, 2) }.toSet()
 
-    fun getCheckerMoveFields(position: String) = availableSteps
+    /** Возвращает список позиций полей на которых оканчиваются ходы шашки с позицией [position] **/
+    private fun getCheckerMoveFields(position: String) = moves
             .filter { it.substring(0, 2) == position }
             .map { it.substring(it.length-2, it.length) }.toSet()
 
-    fun getCommand(from: String, to: String) = availableSteps
-            .filter { it.substring(0, 2) == from }
-            .filter { it.substring(it.length-2, it.length) == to }.first()
+    /** Возвращает команду для шашки с позиции [from], которая перемещается на позицию [to] **/
+    private fun getCommand(from: String, to: String) = moves
+            .filter { it.substring(0, 2) == from }.first { it.substring(it.length - 2, it.length) == to }
 }

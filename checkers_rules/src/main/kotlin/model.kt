@@ -143,11 +143,9 @@ class Checkerboard {
      * Обнулить содержимое полей на диагонали между полями в позиции [from] и в позиции [to] включительно
      */
     private fun remove(from: Position, to: Position) {
-        val x1 = Math.min(from.x, to.x)
-        val x2 = Math.max(from.x, to.x)
-        val y1 = Math.min(from.y, to.y)
-        val y2 = Math.max(from.y, to.y)
-        (x1..x2).forEach { x -> (y1..y2).forEach { y -> remove(x, y) } }
+        val dx = if (to.x - from.x < 0) -1 else 1
+        val dy = if (to.y - from.y < 0) -1 else 1
+        (0..Math.abs(to.x - from.x)).forEach { remove(from.x + it * dx, from.y + it * dy) }
     }
 
     /**
