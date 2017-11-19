@@ -43,7 +43,7 @@ class EvolutionCheckers(populationSize: Int, scale: Int, private val maxSteps: I
         val start = System.nanoTime()
         population = super.evoluteEpoch(initPopulation)
         if (curEpoch % savePerEpoch == 0) saveNets()
-        println(population.map { it.rate })
+        println(population.map { it.nw.id to it.rate }.subList(0, population.size / 2))
         val fin = System.nanoTime()
         println("Время: ${(fin-start)/1_000_000} мс\n")
         return population
@@ -59,7 +59,7 @@ class EvolutionCheckers(populationSize: Int, scale: Int, private val maxSteps: I
 
 fun main(args: Array<String>) {
     with(EvolutionCheckers(10, 5, 20)) {
-        val nw = evolute(10).nw
+        val nw = evolute(100).nw
         saveNets()
         NetworkIO().save(nw, "best.net")
     }

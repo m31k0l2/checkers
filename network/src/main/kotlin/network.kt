@@ -26,7 +26,10 @@ class Layer(size: Int=0) {
     fun activate(input: List<Double>) = neurons.map { it.activate(input) }
 }
 
-class Network(vararg layerSize: Int) {
+class Network(vararg layerSize: Int, val id: Int = ++Network.genId) {
+    companion object {
+        var genId = 0
+    }
     val layers = MutableList(layerSize.size, { i -> Layer(layerSize[i]) })
 
     fun activate(input: List<Double>): List<Double> {

@@ -60,6 +60,7 @@ class BoardModel(private val desk: BoardPane) {
     fun agentStep() {
         Thread(Runnable {
             Thread.sleep(600L)
+            if (moves.isEmpty()) return@Runnable
             val step = agent.selectMove(game.checkerboard, game.currentColor, moves)
             Platform.runLater({
                 nextStep(step)
