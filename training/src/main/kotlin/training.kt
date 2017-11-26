@@ -1,15 +1,22 @@
 import java.io.File
+import java.util.*
 
-class EvolutionCheckers(populationSize: Int, scale: Int, private val maxSteps: Int = 50): AbstractEvolution(populationSize, scale) {
+class EvolutionCheckers(populationSize: Int,
+                        scale: Int,
+                        private val maxSteps: Int = 50,
+                        private val predicateMoves: Int = 4) : AbstractEvolution(populationSize, scale) {
     private var curEpoch = 0
     private val savePerEpoch = 5
     private lateinit var population: List<Individual>
 
     override fun play(a: Network, b: Network): Int {
-        val player1 = Player(a, 2)
-        val player2 = Player(b, 2)
-        val res = play(player1, player2)
-        return 1.takeIf { res == 0 } ?: -2
+        val player1 = Player(a, predicateMoves)
+        val player2 = Player(b, predicateMoves)
+        return if (Random().nextBoolean()) {
+            1.takeIf { play(player1, player2) == 0 } ?: -2
+        } else {
+            1.takeIf { play(player2, player1) == 1 } ?: -2
+        }
     }
 
     override fun createNet() = Network(91, 40, 10, 1)
@@ -17,7 +24,13 @@ class EvolutionCheckers(populationSize: Int, scale: Int, private val maxSteps: I
     override fun generatePopulation(size: Int): List<Individual> {
         if (!File("save0.net").exists()) return super.generatePopulation(size)
         val io = NetworkIO()
-        return (0 until size).map { Individual(io.load("save$it.net")!!) }
+        return (0 until size).map {
+            try {
+                Individual(io.load("save$it.net")!!)
+            } catch (e: Exception) {
+                Individual(createNet())
+            }
+        }
     }
 
     private fun play(player1: Player, player2: Player): Int {
@@ -53,14 +66,14 @@ class EvolutionCheckers(populationSize: Int, scale: Int, private val maxSteps: I
         println("saving...")
         with(NetworkIO()) {
             population.forEachIndexed {i, (nw, _) -> save(nw, "save$i.net") }
+            save(population.first().nw, "best.net")
         }
     }
 }
 
 fun main(args: Array<String>) {
-    with(EvolutionCheckers(10, 5, 20)) {
-        val nw = evolute(100).nw
+    with(EvolutionCheckers(8, 2, 20, 2)) {
+        evolute(100).nw
         saveNets()
-        NetworkIO().save(nw, "best.net")
     }
 }

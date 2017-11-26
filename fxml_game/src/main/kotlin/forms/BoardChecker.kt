@@ -2,8 +2,8 @@ import javafx.scene.Group
 import javafx.scene.paint.Color
 import javafx.scene.shape.Circle
 
-class BoardChecker(val position: Position, val color: Int, val isQueen: Boolean, orientation: Int=0) : Group() {
-    val size = BoardPane.size
+class BoardChecker(private val position: Position, val color: Int, val isQueen: Boolean, orientation: Int = 0) : Group() {
+    private val size = BoardPane.size
     var orientation = orientation
         set(value) {
             field = value
@@ -18,7 +18,7 @@ class BoardChecker(val position: Position, val color: Int, val isQueen: Boolean,
         draw()
     }
 
-    fun calcCenter(): Pair<Double, Double> {
+    private fun calcCenter(): Pair<Double, Double> {
         val x: Double
         val y: Double
         if (orientation == 0) {
@@ -31,7 +31,7 @@ class BoardChecker(val position: Position, val color: Int, val isQueen: Boolean,
         return x to y
     }
 
-    fun draw() {
+    private fun draw() {
         val fillColor = Color.WHITE.takeIf { color == 0 } ?: Color.BLACK
         val strokeColor = Color.BLACK.takeIf { color == 0 } ?: Color.WHITE
         val (x, y) = calcCenter()

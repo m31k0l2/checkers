@@ -27,7 +27,7 @@ class BoardPane : Pane() {
             model.checkers.put(pos.toString(), boardChecker)
         }
         children.addAll(model.fields.values)
-        if (orientation == 1) model.agentStep()
+        if (orientation == 1) model.botStep()
     }
 
     private fun drawDesk() {

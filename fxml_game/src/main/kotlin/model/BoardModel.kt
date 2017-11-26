@@ -20,7 +20,7 @@ class BoardModel(private val desk: BoardPane) {
     var from: String? = null
     var stepCounter = 0.0
     private val stepLimit = 50
-    private val agent = Player(NetworkIO().load("best.net")!!, 2)
+    private val bot = Player(NetworkIO().load("best.net")!!, 2)
     var animationClose = false
     private var moves: List<String>
 
@@ -49,7 +49,7 @@ class BoardModel(private val desk: BoardPane) {
                 if (to in it) {
                     nextStep(getCommand(from!!, to))
                     clearSelected()
-                    agentStep()
+                    botStep()
                 }
             }
             availableMoveFields = null
@@ -57,11 +57,11 @@ class BoardModel(private val desk: BoardPane) {
         }
     }
 
-    fun agentStep() {
+    fun botStep() {
         Thread(Runnable {
             Thread.sleep(600L)
             if (moves.isEmpty()) return@Runnable
-            val step = agent.selectMove(game.checkerboard, game.currentColor, moves)
+            val step = bot.selectMove(game.checkerboard, game.currentColor, moves)
             Platform.runLater({
                 nextStep(step)
             })
