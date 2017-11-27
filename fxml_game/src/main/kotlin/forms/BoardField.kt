@@ -15,7 +15,7 @@ class BoardField(val position: Position, orientation: Int=0) : Group() {
                 it.x = x + 5; it.y = y + 25
             }
         }
-    val size = BoardPane.size
+    private val size = BoardPane.size
     var checker: BoardChecker? = null
         set(value) {
             field = value
@@ -26,7 +26,7 @@ class BoardField(val position: Position, orientation: Int=0) : Group() {
                 children.removeAll(filter)
             }
         }
-    val rectangle = drawRectangle()
+    private val rectangle = drawRectangle()
 
     init {
         children.add(rectangle)
@@ -48,7 +48,7 @@ class BoardField(val position: Position, orientation: Int=0) : Group() {
         return x to y
     }
 
-    fun drawRectangle() = Rectangle().apply {
+    private fun drawRectangle() = Rectangle().apply {
         val insertPoint = insertPoint()
         x = insertPoint.first; y = insertPoint.second
         width = size
