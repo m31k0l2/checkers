@@ -33,6 +33,7 @@ class Player(private val nw: Network, private val predicateMoves: Int = 4, priva
      * По окончанию ходов или по результатам партии (если до выделенного количество ходов игра окончена)
      * происходит подсчёт очков
      * За выйгранную партию начисляется 100 очков, за проигрыш - минус 100
+     * Чтобы выбрать, который приблежает победу или оттягивает поражение, из 100 вычтим количество ходов, затраченных в игре
      * Если результат не определен, очки начисляются за оставшееся количество шашек
      * стоимость шашки - 1 очко, дамки - 3
      * Результат определяется как разность очков между белыми и чёрными
@@ -47,8 +48,8 @@ class Player(private val nw: Network, private val predicateMoves: Int = 4, priva
             game.currentColor = 1 - game.currentColor
             steps = game.nextMoves()
             if (steps.isEmpty()) {
-                return if (game.currentColor != initColor) 100
-                else -100
+                return if (game.currentColor != initColor) 100 - i
+                else -100 + i
             }
         }
         val whiteCount = game.checkerboard.encodeToVector().filter { it > 0 }.count()
