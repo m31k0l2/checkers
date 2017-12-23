@@ -1,3 +1,4 @@
+import java.util.*
 import kotlin.streams.toList
 
 class Player(private val nw: Network, private val predicateMoves: Int = 4, private val debug: Boolean = false) {
@@ -14,10 +15,11 @@ class Player(private val nw: Network, private val predicateMoves: Int = 4, priva
      * Если [debug] == true, то для отладки показывает, как думает ИИ и печатает выбранный им ход
      */
     fun selectMove(checkerboard: Checkerboard, color: Int, steps: List<String>): String {
-        return steps.parallelStream().map { it to play(checkerboard.clone(), color, predicateMoves, it) }.toList() // оценка каждого ходв
+        val list = steps.parallelStream().map { it to play(checkerboard.clone(), color, predicateMoves, it) }.toList() // оценка каждого ходв
                 .onEach { if (debug) println(it) } // показать, как ИИ думает
-                .maxBy { it.second }!!.first // лучший с точки зрения ИИ ход
-                .also { if (debug) println(it) } // показать лучший ход
+        val max = list.maxBy { it.second }!!.second
+        val l = list.filter { it.second == max }
+        return l[Random().nextInt(l.size)].first.also { if (debug) println(it) } // показать лучший ход
     }
 
     /**
