@@ -81,12 +81,14 @@ class Player(private val nw: Network, private val predicateMoves: Int = 4, priva
     private fun selectBestStep(checkerboard: Checkerboard, color: Int, steps: List<String>): String {
         if (steps.isEmpty()) return ""
         if (steps.size == 1) return steps[0]
+        val random = Random()
         val list = steps.map { it to GameController(checkerboard.clone()) }.map { (command, game) ->
+            // может стоить запаралелить
             game.go(command)
             val vector = game.checkerboard.encodeToVector()
             val o = nw.multiActivate(InputEncoder().encode(vector))
             command to o[0]
-        }
+        }.map { it.first to it.second * (1.1 - random.nextDouble() / 5) } // закладываем ошибку +/- 10%
         return (if (color == 0) {
             list.maxBy { it -> it.second }!!.first
         } else list.minBy { it.second }!!.first)
