@@ -36,7 +36,7 @@ class Player(private val nw: Network, private val predicateMoves: Int = 4, priva
      * Результат определяется как разность очков между белыми и чёрными
      */
     private fun play(checkerboard: Checkerboard, initColor: Int, count: Int, initStep: String): Int {
-        val game = Game(checkerboard.clone())
+        val game = GameController(checkerboard.clone())
         game.currentColor = initColor
         var steps = game.nextMoves()
         for (i in 0 until count * 2) {
@@ -78,7 +78,7 @@ class Player(private val nw: Network, private val predicateMoves: Int = 4, priva
     private fun selectBestStep(checkerboard: Checkerboard, color: Int, steps: List<String>): String {
         if (steps.isEmpty()) return ""
         if (steps.size == 1) return steps[0]
-        val list = steps.map { it to Game(checkerboard.clone()) }.map { (command, game) ->
+        val list = steps.map { it to GameController(checkerboard.clone()) }.map { (command, game) ->
             game.go(command)
             val vector = game.checkerboard.encodeToVector()
             val o = nw.multiActivate(InputEncoder().encode(vector))

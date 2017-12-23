@@ -1,10 +1,7 @@
-import org.junit.Assert.assertEquals
-import org.junit.Test
-
 class Test {
     private val debug = false
 
-    private fun searchMoves(color: Int, whiteCheckers: List<String>, blackCheckers: List<String>, queens: List<String>? = null): String = with(Game()) {
+    private fun searchMoves(color: Int, whiteCheckers: List<String>, blackCheckers: List<String>, queens: List<String>? = null): String = with(GameController()) {
         init(color, whiteCheckers, blackCheckers, queens)
         val moves = nextMoves()
         val test = moves.reduceRight { a, b -> "$a,$b" }
@@ -15,13 +12,13 @@ class Test {
         test
     }
 
-    private fun Game.init(color: Int, whiteCheckers: List<String>, blackCheckers: List<String>, queens: List<String>?) {
+    private fun GameController.init(color: Int, whiteCheckers: List<String>, blackCheckers: List<String>, queens: List<String>?) {
         currentColor = color
         init(whiteCheckers, blackCheckers)
         queens?.forEach { queen(it) }
     }
 
-    private fun go(color: Int, whiteCheckers: List<String>, blackCheckers: List<String>, queens: List<String>?, move: String): List<String> = with(Game()) {
+    private fun go(color: Int, whiteCheckers: List<String>, blackCheckers: List<String>, queens: List<String>?, move: String): List<String> = with(GameController()) {
         init(color, whiteCheckers, blackCheckers, queens)
         go(move)
         val white = checkerboard.getCheckers(0).map { it.toString() }.reduceRight { a, b -> "$a,$b" }

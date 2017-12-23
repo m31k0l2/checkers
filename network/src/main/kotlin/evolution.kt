@@ -1,5 +1,5 @@
 import java.util.*
-import kotlin.streams.toList
+import java.util.stream.Collectors
 
 /** Расширение класса List. Позволяет разбить список типа [a, b, c, d, e..] на батчи типа [[a, b, c], [d, e, f] ...]
  * [batchSize] - размер батча
@@ -100,7 +100,7 @@ abstract class AbstractEvolution(
     open fun nextGeneration(population: List<Individual>): List<Individual> {
         val survivors = population.take(populationSize / 2)
         val parents = selection(survivors)
-        val children = parents.parallelStream().map { cross(it) }.toList()
+        val children = parents.parallelStream().map { cross(it) }.collect(Collectors.toList())
         return survivors.union(children).toList()
     }
 

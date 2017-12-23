@@ -1,4 +1,4 @@
-class Game(initboard: Checkerboard? = null) {
+class GameController(initboard: Checkerboard? = null) {
     private val board: Checkerboard
     var currentColor = 0
     val checkerboard: Checkerboard

@@ -18,7 +18,7 @@ class BoardPane : Pane() {
         model = BoardModel(this)
         model.botColor = 1 - orientation
         children.removeAll(children.filter { it is Text })
-        val checkerboard = Game().checkerboard
+        val checkerboard = GameController().checkerboard
         checkerboard.board.filter { it.color == 1 }.map { Position(it.x, it.y) }.forEach { pos ->
             model.fields.put(pos.toString(), BoardField(pos, orientation))
             val checker = checkerboard.get(pos)?.checker ?: return@forEach

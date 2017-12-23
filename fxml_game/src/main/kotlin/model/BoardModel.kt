@@ -14,7 +14,7 @@ class BoardModel(private val desk: BoardPane) {
     val fields = mutableMapOf<String, BoardField>()
     val checkers = mutableMapOf<String, BoardChecker>()
     var botColor = 1
-    var game = Game()
+    var game = GameController()
     var activeFields: Set<String>
     var availableMoveFields: Set<String>? = null
     var from: String? = null
