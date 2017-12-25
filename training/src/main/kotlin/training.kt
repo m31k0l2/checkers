@@ -19,7 +19,7 @@ class EvolutionCheckers(populationSize: Int,
         }
     }
 
-    override fun createNet() = Network(91, 40, 20, 10, 1)
+    override fun createNet() = Network(91, 60, 40, 20, 10, 1)
 
     override fun generatePopulation(size: Int): List<Individual> {
         if (!File("save0.net").exists()) return super.generatePopulation(size)

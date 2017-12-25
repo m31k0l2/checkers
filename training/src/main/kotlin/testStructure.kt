@@ -1,3 +1,8 @@
+import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
+import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
+
 val stepLimit = 50
 
 fun step(game: GameController, player: Player, moves: List<String>) {
@@ -40,10 +45,9 @@ fun play(net1: String, net2: String, debug: Boolean = false): String {
     return ""
 }
 
-fun main(args: Array<String>) {
-//    play("40-10", "40-20")
+fun test() {
     val nets = mutableMapOf<String, Int>()
-    val netNames = listOf("50-20", "40-20-10")
+    val netNames = listOf("60-40-20-10", "40-20")
     nets.put(netNames[0], 0)
     nets.put(netNames[1], 0)
     for (k in 0..1) {
@@ -55,4 +59,28 @@ fun main(args: Array<String>) {
         println()
     }
     nets.forEach { println(it) }
+}
+
+suspend fun test2(size: Int = 10) {
+    val netNames = listOf("best", "40-20")
+    val score1 = AtomicInteger()
+    val score2 = AtomicInteger()
+    val jobs = List(size) {
+        launch {
+            val k = Random().nextInt(2)
+            val winner = play(netNames[k], netNames[1 - k])
+            if (winner == netNames[0]) score1.incrementAndGet()
+            else score2.incrementAndGet()
+            print(".")
+        }
+    }
+    jobs.forEach { it.join() }
+    println()
+    val total = score1.get() + score2.get()
+    println("${netNames.first()}: ${score1.get() * 100.0 / total}%")
+    println("${netNames.last()}: ${score2.get() * 100.0 / total}%")
+}
+
+fun main(args: Array<String>) = runBlocking {
+    test2(15)
 }

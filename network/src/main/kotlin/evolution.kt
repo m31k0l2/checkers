@@ -73,7 +73,7 @@ abstract class AbstractEvolution(
      * Score - сумма очков полученных по итогам игры двух особей (эта же величина характеризует выживаемость особи).
      * Выходом функции является популяция, в которой каждая особь отсортирована в порядке своей выживаемости
      */
-    private fun competition(initPopulation: List<Individual>, playerCount: Int = 3): List<Individual> {
+    private fun competition(initPopulation: List<Individual>, playerCount: Int = 2): List<Individual> {
         val population = initPopulation.map { Individual(it.nw) }
         population.forEach { player1 ->
             if (player1.rate == 0) {
