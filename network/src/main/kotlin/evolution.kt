@@ -68,17 +68,25 @@ abstract class AbstractEvolution(
      * Проводит соревнование внутри популяции. На выходе вычисляет поколение
      * Каждая особь соревнуется со случайно отобранными в количестве [playerCount] особями-конкурентами.
      * По итогам соревнования для каждой особи определяется величина score.
+     * Для ускорения алгоритма мы исключим повторное соревнование особей с ненулевым рейтиногом, он получается
+     * в результате игры предыдщей игры при случайном выборе
      * Score - сумма очков полученных по итогам игры двух особей (эта же величина характеризует выживаемость особи).
      * Выходом функции является популяция, в которой каждая особь отсортирована в порядке своей выживаемости
      */
-    private fun competition(population: List<Individual>, playerCount: Int=5) = population.map {
-        (player1, _) ->
-        // score - величина, характеризующее приспособленность особей
-        val score = (1..playerCount).map {
-            population[random.nextInt(populationSize)].nw }.parallelStream().map {
-            player2 -> play(player1, player2) }.mapToInt { it }.sum()
-        Individual(player1, score)
-    }.sortedBy { it.rate }.reversed()
+    private fun competition(initPopulation: List<Individual>, playerCount: Int = 3): List<Individual> {
+        val population = initPopulation.map { Individual(it.nw) }
+        population.forEach { player1 ->
+            if (player1.rate == 0) {
+                for (i in 0 until playerCount) {
+                    val player2 = population[random.nextInt(populationSize)]
+                    val score = play(player1.nw, player2.nw)
+                    player1.rate += score
+                    player2.rate += if (score < 0) 1 else -2
+                }
+            }
+        }
+        return population.sortedBy { it.rate }.reversed()
+    }
 
     /**
      * Выводим новое поколение популяции.
