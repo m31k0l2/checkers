@@ -1,3 +1,5 @@
+import kotlin.system.measureTimeMillis
+
 /**
  * Решение задачи XOR
  * [testData] - тестовые данные для задачи XOR, набор данных генерируем в виде:
@@ -26,14 +28,7 @@ class EvolutionXOR(populationSize: Int, scale: Int): AbstractEvolution(populatio
      * Выбор очков обосновывается следующими соображениями: наказание должно быть в два раза сильнее чем поощерение.
      * Победа или проигрыш определяется величиной ошибки допущенной при решении задачи XOR
      */
-    override fun play(a: Network, b: Network): Int {
-        if (a == b) return 0
-        val costA = cost(a)
-        val costB = cost(b)
-        if (costA < costB) return 1
-        if (costA == costB) return 0
-        return -2
-    }
+    override fun play(a: Network, b: Network) = if (cost(a) < cost(b)) 1 else -2
 
     /**
      * Определение ошибки нейронной сети при решении задачи XOR.
@@ -55,11 +50,10 @@ class EvolutionXOR(populationSize: Int, scale: Int): AbstractEvolution(populatio
 }
 
 fun main(args: Array<String>) {
-    val before = System.nanoTime()
-    val evolution = EvolutionXOR(30, 10)
-    val nw = evolution.evolute(500).nw
-    NetworkIO().save(nw, "test.net")
-    evolution.test(nw)
-    val after = System.nanoTime()
-    println((after - before) / 1_000_000)
+    val time = measureTimeMillis {
+        val evolution = EvolutionXOR(30, 10)
+        val nw = evolution.evolute(500).nw
+        evolution.test(nw)
+    }
+    println(time)
 }
