@@ -1,12 +1,6 @@
 import java.util.*
 import java.util.stream.Collectors
 
-/** Расширение класса List. Позволяет разбить список типа [a, b, c, d, e..] на батчи типа [[a, b, c], [d, e, f] ...]
- * [batchSize] - размер батча
- */
-fun <E> List<E>.batch(batchSize: Int) = (0 until size/ batchSize).map {
-    subList(it* batchSize, (it+1)* batchSize) }
-
 /**
  * Модель особи.
  * [nw] - нейронная сеть, [rate] - рэйтинг выживаемости
@@ -109,7 +103,7 @@ abstract class AbstractEvolution(
      */
     private fun selection(players: List<Individual>) = (1..populationSize)
             .map { players[random.nextInt(players.size)] }
-            .batch(2).map { it[0] to it[1] }
+            .chunked(2).map { it[0] to it[1] }
 
     /**
      * Выполняем скрещивание.

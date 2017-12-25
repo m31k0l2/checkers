@@ -13,7 +13,7 @@ class EvolutionXOR(populationSize: Int, scale: Int): AbstractEvolution(populatio
     private fun generateTestData(): Map<List<Double>, Double> {
         val answer = listOf(1, -1, -1, 1).map { it.toDouble() }
         return listOf(-1, -1, -1, 1, 1, -1, 1, 1).map { it.toDouble() }
-                .batch(2).mapIndexed { i, xi -> xi to answer[i] }.toMap()
+                .chunked(2).mapIndexed { i, xi -> xi to answer[i] }.toMap()
     }
 
     override fun createNet() = Network(2, 1)
@@ -55,8 +55,11 @@ class EvolutionXOR(populationSize: Int, scale: Int): AbstractEvolution(populatio
 }
 
 fun main(args: Array<String>) {
+    val before = System.nanoTime()
     val evolution = EvolutionXOR(30, 10)
     val nw = evolution.evolute(500).nw
     NetworkIO().save(nw, "test.net")
     evolution.test(nw)
+    val after = System.nanoTime()
+    println((after - before) / 1_000_000)
 }

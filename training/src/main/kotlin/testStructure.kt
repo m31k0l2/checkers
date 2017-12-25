@@ -1,5 +1,3 @@
-import java.util.*
-
 val stepLimit = 50
 
 fun step(game: GameController, player: Player, moves: List<String>) {
@@ -45,15 +43,16 @@ fun play(net1: String, net2: String, debug: Boolean = false): String {
 fun main(args: Array<String>) {
 //    play("40-10", "40-20")
     val nets = mutableMapOf<String, Int>()
-    val netNames = listOf("40-10", "40-20")
+    val netNames = listOf("50-20", "40-20-10")
     nets.put(netNames[0], 0)
     nets.put(netNames[1], 0)
-    for (i in 1..100) {
-        val r = Random().nextInt(2)
-        val winner = play(netNames[r], netNames[1 - r])
-        nets[winner] = nets[winner]!! + 1
-        print("$i.")
+    for (k in 0..1) {
+        for (i in 1..10) {
+            val winner = play(netNames[k], netNames[1 - k])
+            nets[winner] = nets[winner]!! + 1
+            print("$i.")
+        }
+        println()
     }
-    println()
     nets.forEach { println(it) }
 }
