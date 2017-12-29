@@ -45,24 +45,8 @@ fun play(net1: String, net2: String, debug: Boolean = false): String {
     return ""
 }
 
-fun test() {
-    val nets = mutableMapOf<String, Int>()
-    val netNames = listOf("60-40-20-10", "40-20")
-    nets.put(netNames[0], 0)
-    nets.put(netNames[1], 0)
-    for (k in 0..1) {
-        for (i in 1..10) {
-            val winner = play(netNames[k], netNames[1 - k])
-            nets[winner] = nets[winner]!! + 1
-            print("$i.")
-        }
-        println()
-    }
-    nets.forEach { println(it) }
-}
-
-suspend fun test2(size: Int = 10) {
-    val netNames = listOf("best", "40-20")
+suspend fun test(name: String, size: Int = 10) {
+    val netNames = listOf("best", name)
     val score1 = AtomicInteger()
     val score2 = AtomicInteger()
     val jobs = List(size) {
@@ -82,5 +66,7 @@ suspend fun test2(size: Int = 10) {
 }
 
 fun main(args: Array<String>) = runBlocking {
-    test2(15)
+    test("40-20", 15)
+    test("80-40-20-10-5", 15)
+    test("80-60-40-20-10-5", 15)
 }

@@ -1,7 +1,7 @@
 import java.util.*
 
 fun main(args: Array<String>) {
-    val game = Game()
+    val game = GameController()
     val scanner = Scanner(System.`in`)
     var moves: List<String>
     val humanColor = 0
@@ -36,7 +36,7 @@ fun main(args: Array<String>) {
             println("board clone")
             val board = game.checkerboard
             val step = player.selectMove(game.checkerboard, game.currentColor, moves)
-            Game(board).print()
+            GameController(board).print()
             game.go(step)
         }
         game.currentColor = 1 - game.currentColor
