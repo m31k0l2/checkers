@@ -51,8 +51,8 @@ class EvolutionXOR(populationSize: Int, scale: Int): AbstractEvolution(populatio
 
 fun main(args: Array<String>) {
     val time = measureTimeMillis {
-        val evolution = EvolutionXOR(30, 10)
-        val nw = evolution.evolute(500).nw
+        val evolution = EvolutionXOR(36, 10)
+        val nw = evolution.evolute(1000).nw
         evolution.test(nw)
     }
     println(time)

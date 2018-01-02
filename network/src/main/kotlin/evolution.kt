@@ -1,3 +1,5 @@
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.runBlocking
 import java.util.*
 import java.util.stream.Collectors
 
@@ -24,6 +26,7 @@ abstract class AbstractEvolution(
     private var crossoverRate = 0.5
     private var mutantRate = 0.1
     private val random = Random()
+    private var testNet: Network? = null
 
     /**
      * Запуск эволюции.
@@ -31,7 +34,8 @@ abstract class AbstractEvolution(
      * Создаём популяцию размером populationSize
      * Выполняем эволюцию популяци от эпохи к эпохе
      */
-    fun evolute(epochSize: Int): Individual {
+    fun evolute(epochSize: Int, testNetName: String? = null): Individual {
+        testNetName?.let { testNet = NetworkIO().load(it) }
         var population = generatePopulation(populationSize)
         (0 until epochSize).forEach { population = evoluteEpoch(population) }
         return population.first()
@@ -66,26 +70,43 @@ abstract class AbstractEvolution(
 
     /**
      * Проводит соревнование внутри популяции. На выходе вычисляет поколение
-     * Каждая особь соревнуется со случайно отобранными в количестве [playerCount] особями-конкурентами.
+     * Каждая особь соревнуется со случайно отобранными в количестве [playersInGroup] особями-конкурентами.
      * По итогам соревнования для каждой особи определяется величина score.
-     * Для ускорения алгоритма мы исключим повторное соревнование особей с ненулевым рейтиногом, он получается
-     * в результате игры предыдщей игры при случайном выборе
      * Score - сумма очков полученных по итогам игры двух особей (эта же величина характеризует выживаемость особи).
      * Выходом функции является популяция, в которой каждая особь отсортирована в порядке своей выживаемости
      */
-    private fun competition(initPopulation: List<Individual>, playerCount: Int = 2): List<Individual> {
-        val population = initPopulation.map { Individual(it.nw) }
-        population.forEach { player1 ->
-            if (player1.rate == 0) {
-                for (i in 0 until playerCount) {
-                    val player2 = population[random.nextInt(populationSize)]
-                    val score = play(player1.nw, player2.nw)
-                    player1.rate += score
-                    player2.rate += if (score < 0) 1 else -2
-                }
-            }
+    private fun competition(initPopulation: List<Individual>, playersInGroup: Int = 4): List<Individual> {
+        val population = initPopulation.map { Individual(it.nw) }.shuffled()
+        population.chunked(playersInGroup).forEach { players ->
+            testNet?.let { playGroupWithTestNet(players) }
+            playGroup(players)
         }
         return population.sortedBy { it.rate }.reversed()
+    }
+
+    private fun playGroup(group: List<Individual>) {
+        val n = group.size - 1
+        (0 until n).forEach { i -> (i + 1..n).forEach { play(group[i], group[it]) } }
+    }
+
+    private fun play(player1: Individual, player2: Individual) {
+        val players = listOf(player1, player2).shuffled()
+        val score = play(players[0].nw, players[1].nw)
+        players[0].rate += score
+        players[1].rate += if (score < 0) 1 else -2
+    }
+
+    private fun playGroupWithTestNet(group: List<Individual>) = runBlocking {
+        val opponent = Individual(testNet!!)
+        (0 until group.size).map { group[it] }.forEach { player ->
+            val score1 = async {
+                play(player.nw, opponent.nw)
+            }
+            val score2 = async {
+                play(opponent.nw, player.nw)
+            }
+            player.rate = score1.await() + if (score2.await() < 0) 1 else -2
+        }
     }
 
     /**

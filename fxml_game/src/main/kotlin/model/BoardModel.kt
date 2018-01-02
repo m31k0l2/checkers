@@ -20,7 +20,7 @@ class BoardModel(private val desk: BoardPane) {
     var from: String? = null
     var stepCounter = 0.0
     private val stepLimit = 50
-    private val bot = Player(NetworkIO().load("best.net")!!, 2)
+    private val bot = Player(NetworkIO().load("40-20.net")!!, 2, 3.0)
     var animationClose = false
     private var moves: List<String>
 
@@ -75,6 +75,7 @@ class BoardModel(private val desk: BoardPane) {
             return
         }
         stepCounter += 0.5
+        println("Step: $stepCounter")
         game.go(command)
         println("${game.currentColor}: $command")
         game.print()
