@@ -1,6 +1,7 @@
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
+import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 val stepLimit = 20
@@ -46,11 +47,11 @@ fun play(net1: String, net2: String, error: Double = 0.0, debug: Boolean = false
     return ""
 }
 
-suspend fun test(name1: String, name2: String, size: Int, counter: AtomicInteger): Double {
+suspend fun test(name1: String, name2: String, counter: AtomicInteger, netsSize: Int): Double {
     val netNames = listOf(name1, name2)
     val score1 = AtomicInteger()
     val score2 = AtomicInteger()
-    val jobs = List(size) {
+    val jobs = List(testGames) {
         launch {
             //            val k = Random().nextInt(2)
             (0..1).forEach {
@@ -58,7 +59,7 @@ suspend fun test(name1: String, name2: String, size: Int, counter: AtomicInteger
                 if (winner == netNames[0]) score1.incrementAndGet()
                 else score2.incrementAndGet()
                 val step = counter.incrementAndGet()
-                val total = step * 100 / (list.size * (list.size - 1) * testGames * 2)
+                val total = step * 100 / (netsSize * (netsSize - 1) * testGames * 2)
                 println("$total%")
             }
         }
@@ -71,19 +72,16 @@ suspend fun test(name1: String, name2: String, size: Int, counter: AtomicInteger
     return result
 }
 
-fun testStructure(): String {
+fun testNets(nets: List<String>): String {
     val counter = AtomicInteger(0)
     return runBlocking {
-        val nets = list.map { layersCapacity ->
-            layersCapacity.map { it.toString() }.reduce { acc, s -> "$acc-$s" } + ".net"
-        }
         val results =
                 nets.map { curNet ->
                     async {
                         var result = 0.0
                         nets.forEach { net ->
                             if (net != curNet) {
-                                result += test(curNet, net, testGames, counter)
+                                result += test(curNet, net, counter, nets.size)
                             }
                         }
                         curNet to result
@@ -98,6 +96,20 @@ fun testStructure(): String {
     }
 }
 
+fun testStructure(list: List<List<Int>>): String {
+    val nets = list.map { layersCapacity ->
+        layersCapacity.map { it.toString() }.reduce { acc, s -> "$acc-$s" } + ".net"
+    }
+    return testNets(nets)
+}
+
 fun main(args: Array<String>) {
-    println(testStructure())
+    val myFolder = File("nets/winners")
+    val files = myFolder.listFiles()
+    val nets = listOf(files.map { "nets/winners/${it.name}" },
+            listOf(
+//                    "40.net"
+            )).flatMap { it }
+    testNets(nets)
+//    nets.forEach { println(it) }
 }

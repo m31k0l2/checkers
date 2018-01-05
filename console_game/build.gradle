@@ -2,7 +2,7 @@ group 'checkers'
 version '1.0'
 
 buildscript {
-    ext.kotlin_version = '1.1.60'
+    ext.kotlin_version = '1.2.10'
 
     repositories {
         mavenCentral()
@@ -11,8 +11,6 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
-
-apply plugin: 'java'
 apply plugin: 'kotlin'
 
 sourceCompatibility = 1.8
@@ -23,7 +21,6 @@ repositories {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
-    testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
 compileKotlin {
@@ -31,4 +28,27 @@ compileKotlin {
 }
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
+}
+//jar {
+//    manifest {
+//        attributes 'Main-Class': 'console_game.main.kotlin.consoleGameKt'
+//    }
+//
+//    // This line of code recursively collects and copies all of a project's files
+//    // and adds them to the JAR itself. One can extend this task, to skip certain
+//    // files or particular types at will
+//    //from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+//}
+dependencies {
+    compile project(':checkers_rules')
+    compile project(':network')
+    compile project(':training')
+}
+jar {
+    manifest {
+        attributes(
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'consoleGameKt'
+        )
+    }
 }

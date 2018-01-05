@@ -27,6 +27,7 @@ abstract class AbstractEvolution(
     private var mutantRate = 0.1
     private val random = Random()
     private var testNet: Network? = null
+    private var onlyTestNet = false
 
     /**
      * Запуск эволюции.
@@ -34,7 +35,8 @@ abstract class AbstractEvolution(
      * Создаём популяцию размером populationSize
      * Выполняем эволюцию популяци от эпохи к эпохе
      */
-    fun evolute(epochSize: Int, testNetName: String? = null): Individual {
+    fun evolute(epochSize: Int, testNetName: String? = null, onlyTestNet: Boolean = false): Individual {
+        this.onlyTestNet = onlyTestNet
         testNetName?.let { testNet = NetworkIO().load(it) }
         var population = generatePopulation(populationSize)
         (0 until epochSize).forEach { population = evoluteEpoch(population) }
@@ -79,7 +81,7 @@ abstract class AbstractEvolution(
         val population = initPopulation.map { Individual(it.nw) }.shuffled()
         population.chunked(playersInGroup).forEach { players ->
             testNet?.let { playGroupWithTestNet(players) }
-            playGroup(players)
+            if (!onlyTestNet) playGroup(players)
         }
         return population.sortedBy { it.rate }.reversed()
     }
