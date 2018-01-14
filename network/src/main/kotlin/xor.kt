@@ -3,17 +3,17 @@ import kotlin.system.measureTimeMillis
 /**
  * Решение задачи XOR
  * [testData] - тестовые данные для задачи XOR, набор данных генерируем в виде:
- * [-1; -1] => +1
- * [-1; +1] => -1
- * [+1; -1] => -1
- * [+1; +1] => +1,
+ * [-1; -1] => -1
+ * [-1; +1] => +1
+ * [+1; -1] => +1
+ * [+1; +1] => -1,
  * где -1 = ЛОЖЬ, +1 = ИСТИНА
  */
 class EvolutionXOR(populationSize: Int, scale: Int): AbstractEvolution(populationSize, scale) {
     private val testData: Map<List<Double>, Double> = generateTestData()
 
     private fun generateTestData(): Map<List<Double>, Double> {
-        val answer = listOf(1, -1, -1, 1).map { it.toDouble() }
+        val answer = listOf(-1, 1, 1, -1).map { it.toDouble() }
         return listOf(-1, -1, -1, 1, 1, -1, 1, 1).map { it.toDouble() }
                 .chunked(2).mapIndexed { i, xi -> xi to answer[i] }.toMap()
     }
