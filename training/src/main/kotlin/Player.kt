@@ -1,7 +1,7 @@
 import java.util.*
 import kotlin.streams.toList
 
-class Player(private val nw: Network, private val predicateMoves: Int = 4,
+class Player(val nw: Network, private val predicateMoves: Int = 4,
              val error: Double = 0.0, private val debug: Boolean = false) {
     /**
      * Выбор ИИ наилучшего хода
@@ -91,8 +91,11 @@ class Player(private val nw: Network, private val predicateMoves: Int = 4,
             val o = nw.multiActivate(InputEncoder().encode(vector))
             command to o[0]
         }.toList().map {
-            it.first to it.second * if (error > 0) 1 + error - random.nextDouble() * (2 * error) / 100 else 1.0
+            it.first to it.second * if (error > 0) (1 + error/100 * (1 - 2*random.nextDouble())) else 1.0
         } // закладываем ошибку +/- 1%
+        if (debug) {
+            list.forEach { println(it) }
+        }
         val step = (if (color == 0) {
             list.maxBy { it -> it.second }!!
         } else list.minBy { it.second }!!)

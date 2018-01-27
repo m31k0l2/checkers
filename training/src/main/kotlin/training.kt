@@ -12,11 +12,14 @@ class EvolutionCheckers(populationSize: Int,
                         private val layersCapacity: List<Int>,
                         scale: Int,
                         private val maxSteps: Int = 50,
-                        private val predicateMoves: Int = 4) : AbstractEvolution(populationSize, scale) {
+                        private val predicateMoves: Int = 4,
+                        mutantRate: Double = 0.1,
+                        dir: String = "nets/",
+                        private val savePerEpoch: Int = 5
+                        ) : AbstractEvolution(populationSize, scale, mutantRate = mutantRate) {
     private var curEpoch = 0
-    private val savePerEpoch = 5
     private lateinit var population: List<Individual>
-    val folder = "nets/" + layersCapacity.map { it.toString() }.reduce { acc, s -> "$acc-$s" }
+    val folder = dir + layersCapacity.map { it.toString() }.reduce { acc, s -> "$acc-$s" }
 
     init {
         if (File("nets/").mkdir()) {
@@ -94,36 +97,6 @@ class EvolutionCheckers(populationSize: Int,
     }
 }
 
-fun buildNameForNet(layersCapacity: List<Int>) =
-        layersCapacity.map { it.toString() }.reduce { acc, s -> "$acc-$s" } + ".net"
-
-fun teachNet(layersCapacity: List<Int>, populationSize: Int,
-             epochSize: Int, testNet: String? = null, onlyTestNet: Boolean = false) {
-    with(EvolutionCheckers(populationSize, layersCapacity, 10, 50, 2)) {
-        val nw = evolute(epochSize, testNet, onlyTestNet).nw
-        NetworkIO().save(nw, buildNameForNet(layersCapacity))
-    }
-}
-
 fun main(args: Array<String>) {
-    val populationSize = 12
-    val epochSize = 10
-    var testNet: String?
-    var totalEpoch = 5
-    val list = listOf(
-            listOf(40, 20),
-            listOf(50, 30, 10),
-            listOf(60, 40, 30, 20)
-    )
-    list.forEach {
-        teachNet(it, populationSize, 5)
-    }
-    while (true) {
-        list.forEach { layersCapacity ->
-            testNet = testStructure(list)
-            teachNet(layersCapacity, populationSize, epochSize, testNet?.takeIf { it != buildNameForNet(layersCapacity) })
-        }
-        totalEpoch += 5
-        println("Всего эпох: $totalEpoch")
-    }
+    teachNet(listOf(40, 20, 5), 20, 500, 0.01, "testnets/test2/")
 }

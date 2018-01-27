@@ -20,7 +20,7 @@ class BoardModel(private val desk: BoardPane) {
     var from: String? = null
     var stepCounter = 0.0
     private val stepLimit = 50
-    private val bot = Player(NetworkIO().load("nets/winners/40_2.net")!!, 2, 3.0)
+    private val bot = Player(NetworkIO().load("testnets/test2/40-20-5/save0.net")!!, 2, 3.0, true)
     var animationClose = false
     private var moves: List<String>
 
@@ -126,6 +126,9 @@ class BoardModel(private val desk: BoardPane) {
             text = if (color == 0) "   Белые\nпобедили"
             else " Черные\nпобедили"
             fields.forEach { _, boardField -> boardField.onMouseClicked = null }
+            if (color == botColor) {
+                NetworkIO().save(bot.nw, "nets/winners/${bot.nw.hashCode()}.net")
+            }
         } else {
             text = "\n  ничья"
         }

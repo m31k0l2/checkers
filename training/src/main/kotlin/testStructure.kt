@@ -13,6 +13,34 @@ fun step(game: GameController, player: Player, moves: List<String>) {
     game.currentColor = 1 - game.currentColor
 }
 
+fun play(nw1: Network, nw2: Network, error: Double = 0.0, debug: Boolean = false): Int {
+    val game = GameController()
+    var moves: List<String>
+    val white = Player(nw1, 2, error, debug)
+    val black = Player(nw2, 2, error, debug)
+    var curStep = 0
+    while (curStep++ < stepLimit) {
+        if (debug) game.print()
+        moves = game.nextMoves()
+        if (moves.isEmpty()) {
+            return if (game.currentColor == 0) {
+                1
+            } else {
+                0
+            }
+        }
+        if (curStep == stepLimit) {
+            return if (game.checkerboard.encodeToVector().sum() > 0) {
+                0
+            } else {
+                1
+            }
+        }
+        step(game, white.takeIf { game.currentColor == 0 } ?: black, moves)
+    }
+    return -1
+}
+
 fun play(net1: String, net2: String, error: Double = 0.0, debug: Boolean = false): String {
     val game = GameController()
     var moves: List<String>
@@ -67,8 +95,6 @@ suspend fun test(name1: String, name2: String, counter: AtomicInteger, netsSize:
     jobs.forEach { it.join() }
     val total = score1.get() + score2.get()
     val result = score1.get() * 100.0 / total
-//    println("${netNames.first()}: $result%")
-//    println("${netNames.last()}: ${100 - result}%")
     return result
 }
 
@@ -96,20 +122,9 @@ fun testNets(nets: List<String>): String {
     }
 }
 
-fun testStructure(list: List<List<Int>>): String {
-    val nets = list.map { layersCapacity ->
-        layersCapacity.map { it.toString() }.reduce { acc, s -> "$acc-$s" } + ".net"
-    }
-    return testNets(nets)
-}
-
 fun main(args: Array<String>) {
     val myFolder = File("nets/winners")
     val files = myFolder.listFiles()
-    val nets = listOf(files.map { "nets/winners/${it.name}" },
-            listOf(
-//                    "40.net"
-            )).flatMap { it }
+    val nets = files.map { "nets/winners/${it.name}"}
     testNets(nets)
-//    nets.forEach { println(it) }
 }
