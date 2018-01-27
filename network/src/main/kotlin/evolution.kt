@@ -21,10 +21,10 @@ data class Individual(val nw: Network, var rate: Int=0)
  */
 abstract class AbstractEvolution(
         private val populationSize: Int,
-        private val scale: Int
+        private val scale: Int,
+        private val mutantRate: Double=0.1
 ) {
     private var crossoverRate = 0.5
-    private var mutantRate = 0.1
     private val random = Random()
     private var testNet: Network? = null
     private var onlyTestNet = false
@@ -53,7 +53,7 @@ abstract class AbstractEvolution(
         var population = competition(initPopulation)
         population = nextGeneration(population) // генерируем следующее поколение особей
         // случайным образом регулируем эволюцию для следующего поколения
-        mutantRate = random.nextDouble() * 0.5 // в пределах [0; 0.5]
+//        mutantRate = random.nextDouble() * 0.5 // в пределах [0; 0.5]
         crossoverRate = random.nextDouble() // -//- [0; 1.0]
         return population
     }

@@ -9,7 +9,7 @@ import kotlin.system.measureTimeMillis
  * [+1; +1] => -1,
  * где -1 = ЛОЖЬ, +1 = ИСТИНА
  */
-class EvolutionXOR(populationSize: Int, scale: Int): AbstractEvolution(populationSize, scale) {
+class EvolutionXOR(populationSize: Int, scale: Int, mutantRate: Double=0.1): AbstractEvolution(populationSize, scale, mutantRate = mutantRate) {
     private val testData: Map<List<Double>, Double> = generateTestData()
 
     private fun generateTestData(): Map<List<Double>, Double> {
@@ -51,8 +51,8 @@ class EvolutionXOR(populationSize: Int, scale: Int): AbstractEvolution(populatio
 
 fun main(args: Array<String>) {
     val time = measureTimeMillis {
-        val evolution = EvolutionXOR(36, 10)
-        val nw = evolution.evolute(1000).nw
+        val evolution = EvolutionXOR(40, 10, 0.2)
+        val nw = evolution.evolute(250).nw
         evolution.test(nw)
     }
     println(time)
