@@ -16,12 +16,26 @@ class Player(val nw: Network, private val predicateMoves: Int = 4,
      * Если [debug] == true, то для отладки показывает, как думает ИИ и печатает выбранный им ход
      */
     fun selectMove(checkerboard: Checkerboard, color: Int, steps: List<String>): String {
-        val list = steps.parallelStream().map { it to play(checkerboard, color, predicateMoves, it) }.toList() // оценка каждого ходв
-                .onEach { if (debug) println(it) } // показать, как ИИ думает
+        if (steps.size == 1) return steps.first()
+        val pairs = stepsToPairs(steps, checkerboard)
+        if (predicateMoves == 0) {
+            return if (color == 0) pairs.sortedBy { it.second }.last().first
+            else pairs.sortedBy { it.second }.first().first
+        }
+        val goodPairs = filterGoodSteps(pairs, color)
+        val list = goodPairs.parallelStream().map {
+            it to play(checkerboard, color, predicateMoves, it.first) }.toList()
         val max = list.maxBy { it.second }!!.second
         val l = list.filter { it.second == max }.map { it.first }
-        val step = selectBestStep(checkerboard, color, l, debug)
-        return step.also { if (debug) println(it) } // показать лучший ход
+        val step = selectBestStep(l, color, debug)
+        if (debug) {
+            println("все ходы: $steps")
+            println("ожидания: $pairs")
+            println("лучшие ожидания: $goodPairs")
+            println("ходы с предполагаемой выгодой: $list")
+            println("лучший ход: $step")
+        }
+        return step
     }
 
     /**
@@ -43,16 +57,18 @@ class Player(val nw: Network, private val predicateMoves: Int = 4,
     private fun play(checkerboard: Checkerboard, initColor: Int, count: Int, initStep: String): Int {
         val game = GameController(checkerboard.clone())
         game.currentColor = initColor
-        var steps = game.nextMoves()
+        lateinit var steps: List<Pair<String, Double>>
         for (i in 0 until count * 2) {
-            val step = if (i == 0) initStep else selectBestStep(game.checkerboard, game.currentColor, steps)
+            val step = if (i == 0) initStep else {
+                steps = filterGoodSteps(stepsToPairs(game.nextMoves(), game.checkerboard), game.currentColor)
+                if (steps.isEmpty()) {
+                    return if (game.currentColor != initColor) 100 - i
+                    else -100 + i
+                }
+                selectBestStep(steps, game.currentColor)
+            }
             game.go(step)
             game.currentColor = 1 - game.currentColor
-            steps = game.nextMoves()
-            if (steps.isEmpty()) {
-                return if (game.currentColor != initColor) 100 - i
-                else -100 + i
-            }
         }
         val whiteCount = game.checkerboard.encodeToVector().filter { it > 0 }.count()
         val blackCount = game.checkerboard.encodeToVector().filter { it < 0 }.count()
@@ -80,17 +96,11 @@ class Player(val nw: Network, private val predicateMoves: Int = 4,
      * Если нейронная сеть играет за чёрных, то выбирается ход наиболее худший для белых (т.е. минимальное значение)
      * Если за белых, то соответственно максимальное значение
      **/
-    private fun selectBestStep(checkerboard: Checkerboard, color: Int, steps: List<String>, debug: Boolean = false): String {
+    private fun selectBestStep(steps: List<Pair<String, Double>>, color: Int, debug: Boolean = false): String {
         if (steps.isEmpty()) return ""
-        if (steps.size == 1) return steps[0]
+        if (steps.size == 1) return steps.first().first
         val random = Random()
-        val list = steps.parallelStream().map { it to GameController(checkerboard.clone()) }.map { (command, game) ->
-            // может стоить запаралелить
-            game.go(command)
-            val vector = game.checkerboard.encodeToVector()
-            val o = nw.multiActivate(InputEncoder().encode(vector))
-            command to o[0]
-        }.toList().map {
+        val list = steps.map {
             it.first to it.second * if (error > 0) (1 + error/100 * (1 - 2*random.nextDouble())) else 1.0
         } // закладываем ошибку +/- 1%
         if (debug) {
@@ -104,4 +114,24 @@ class Player(val nw: Network, private val predicateMoves: Int = 4,
         }
         return step.first
     }
+
+    private fun stepsToPairs(steps: List<String>, checkerboard: Checkerboard) = steps.parallelStream().map {
+        val game = GameController(checkerboard.clone())
+        game.go(it)
+        val x = game.checkerboard.encodeToVector()
+        val o = nw.multiActivate(InputEncoder().encode(x))
+        it to o.first()
+    }.toList()
+
+    private fun filterGoodSteps(steps: List<Pair<String, Double>>, color: Int): List<Pair<String, Double>> {
+        if (steps.size < 3) return steps
+        val median = steps.map { it.second }.median()
+        return if (color == 0) {
+            steps.filter { it.second >= median }
+        } else {
+            steps.filter { it.second <= median }
+        }
+    }
 }
+
+private fun List<Double>.median() = sorted()[size/2]

@@ -1,5 +1,3 @@
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.runBlocking
 import java.util.*
 import java.util.stream.Collectors
 
@@ -80,8 +78,7 @@ abstract class AbstractEvolution(
     private fun competition(initPopulation: List<Individual>, playersInGroup: Int = 4): List<Individual> {
         val population = initPopulation.map { Individual(it.nw) }.shuffled()
         population.chunked(playersInGroup).forEach { players ->
-            testNet?.let { playGroupWithTestNet(players) }
-            if (!onlyTestNet) playGroup(players)
+            playGroup(players)
         }
         return population.sortedBy { it.rate }.reversed()
     }
@@ -96,19 +93,6 @@ abstract class AbstractEvolution(
         val score = play(players[0].nw, players[1].nw)
         players[0].rate += score
         players[1].rate += if (score < 0) 1 else -2
-    }
-
-    private fun playGroupWithTestNet(group: List<Individual>) = runBlocking {
-        val opponent = Individual(testNet!!)
-        (0 until group.size).map { group[it] }.forEach { player ->
-            val score1 = async {
-                play(player.nw, opponent.nw)
-            }
-            val score2 = async {
-                play(opponent.nw, player.nw)
-            }
-            player.rate = score1.await() + if (score2.await() < 0) 1 else -2
-        }
     }
 
     /**

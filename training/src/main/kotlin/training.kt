@@ -6,13 +6,13 @@ import java.util.*
  * [layersCapacity] - структура сети в виде списка, содержащего размеры скрытых слоёв
  * [scale] - предельное значение гена (веса сети). Вес выбирается из диапазона [-scale;  scale]
  * [maxSteps] - максимальное количество ходов до прекращения игры
- * [predicateMoves] - количество ходов вперёд на которые бот будет анализировать игру
+ * [predicateMoves] - количество ходов вперёд на которые бот будет анализировать игру, выставляется в 0
  */
 class EvolutionCheckers(populationSize: Int,
                         private val layersCapacity: List<Int>,
                         scale: Int,
                         private val maxSteps: Int = 50,
-                        private val predicateMoves: Int = 4,
+                        private val predicateMoves: Int = 2,
                         mutantRate: Double = 0.1,
                         dir: String = "nets/",
                         private val savePerEpoch: Int = 5
@@ -31,8 +31,8 @@ class EvolutionCheckers(populationSize: Int,
     }
 
     override fun play(a: Network, b: Network): Int {
-        val player1 = Player(a, predicateMoves)
-        val player2 = Player(b, predicateMoves)
+        val player1 = Player(a, 0)
+        val player2 = Player(b, 0)
         return if (Random().nextBoolean()) {
             1.takeIf { play(player1, player2) == 0 } ?: -2
         } else {
@@ -98,5 +98,5 @@ class EvolutionCheckers(populationSize: Int,
 }
 
 fun main(args: Array<String>) {
-    teachNet(listOf(40, 20, 5), 20, 500, 0.01, "testnets/test2/")
+    teachNet(listOf(40, 20), 20, 1000, 0.1, "testnets/test1/")
 }

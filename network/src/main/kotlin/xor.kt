@@ -51,8 +51,8 @@ class EvolutionXOR(populationSize: Int, scale: Int, mutantRate: Double=0.1): Abs
 
 fun main(args: Array<String>) {
     val time = measureTimeMillis {
-        val evolution = EvolutionXOR(40, 10, 0.2)
-        val nw = evolution.evolute(250).nw
+        val evolution = EvolutionXOR(40, 100, 0.2)
+        val nw = evolution.evolute(200).nw
         evolution.test(nw)
     }
     println(time)
