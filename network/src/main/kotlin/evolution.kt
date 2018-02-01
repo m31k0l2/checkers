@@ -24,8 +24,6 @@ abstract class AbstractEvolution(
 ) {
     private var crossoverRate = 0.5
     private val random = Random()
-    private var testNet: Network? = null
-    private var onlyTestNet = false
 
     /**
      * Запуск эволюции.
@@ -33,9 +31,7 @@ abstract class AbstractEvolution(
      * Создаём популяцию размером populationSize
      * Выполняем эволюцию популяци от эпохи к эпохе
      */
-    fun evolute(epochSize: Int, testNetName: String? = null, onlyTestNet: Boolean = false): Individual {
-        this.onlyTestNet = onlyTestNet
-        testNetName?.let { testNet = NetworkIO().load(it) }
+    fun evolute(epochSize: Int): Individual {
         var population = generatePopulation(populationSize)
         (0 until epochSize).forEach { population = evoluteEpoch(population) }
         return population.first()

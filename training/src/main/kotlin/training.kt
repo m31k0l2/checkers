@@ -1,5 +1,4 @@
 import java.io.File
-import java.util.*
 
 /**
  * Обучение нейронной сети при помощи эволюционного алгоритма игре Шашки
@@ -31,13 +30,9 @@ class EvolutionCheckers(populationSize: Int,
     }
 
     override fun play(a: Network, b: Network): Int {
-        val player1 = Player(a, 0)
-        val player2 = Player(b, 0)
-        return if (Random().nextBoolean()) {
-            1.takeIf { play(player1, player2) == 0 } ?: -2
-        } else {
-            1.takeIf { play(player2, player1) == 1 } ?: -2
-        }
+        val player1 = Player(a, predicateMoves)
+        val player2 = Player(b, predicateMoves)
+        return 1.takeIf { play(player1, player2) == 0 } ?: -2
     }
 
     override fun createNet(): Network {
@@ -98,5 +93,5 @@ class EvolutionCheckers(populationSize: Int,
 }
 
 fun main(args: Array<String>) {
-    teachNet(listOf(40, 20), 20, 1000, 0.1, "testnets/test1/")
+    teachNet(listOf(60, 40, 10), 20, 10000, 0.1, "nets/")
 }

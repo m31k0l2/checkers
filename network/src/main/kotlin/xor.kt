@@ -11,6 +11,7 @@ import kotlin.system.measureTimeMillis
  */
 class EvolutionXOR(populationSize: Int, scale: Int, mutantRate: Double=0.1): AbstractEvolution(populationSize, scale, mutantRate = mutantRate) {
     private val testData: Map<List<Double>, Double> = generateTestData()
+    lateinit var population: List<Individual>
 
     private fun generateTestData(): Map<List<Double>, Double> {
         val answer = listOf(-1, 1, 1, -1).map { it.toDouble() }
@@ -47,13 +48,21 @@ class EvolutionXOR(populationSize: Int, scale: Int, mutantRate: Double=0.1): Abs
     fun test(nw: Network) = testData.keys.forEach {
         println("$it -> ${nw.activate(it)}")
     }
+
+    override fun evoluteEpoch(initPopulation: List<Individual>): List<Individual> {
+        population = super.evoluteEpoch(initPopulation)
+        return population
+    }
 }
 
 fun main(args: Array<String>) {
     val time = measureTimeMillis {
-        val evolution = EvolutionXOR(40, 100, 0.2)
+        val evolution = EvolutionXOR(40, 10, 0.1)
         val nw = evolution.evolute(200).nw
         evolution.test(nw)
+        evolution.population.forEachIndexed { index, individual ->
+            NetworkIO().save(individual.nw, "nets/xor/save$index.net")
+        }
     }
     println(time)
 }

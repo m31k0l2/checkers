@@ -1,7 +1,7 @@
 import java.util.*
 import kotlin.streams.toList
 
-class Player(val nw: Network, private val predicateMoves: Int = 4,
+class Player(val nw: Network, private val predicateMoves: Int = 2,
              val error: Double = 0.0, private val debug: Boolean = false) {
     /**
      * Выбор ИИ наилучшего хода
@@ -126,10 +126,11 @@ class Player(val nw: Network, private val predicateMoves: Int = 4,
     private fun filterGoodSteps(steps: List<Pair<String, Double>>, color: Int): List<Pair<String, Double>> {
         if (steps.size < 3) return steps
         val median = steps.map { it.second }.median()
+        val dif = 1.25 // отклонение от медианы
         return if (color == 0) {
-            steps.filter { it.second >= median }
+            steps.filter { it.second >= median/dif }
         } else {
-            steps.filter { it.second <= median }
+            steps.filter { it.second <= median*dif }
         }
     }
 }
