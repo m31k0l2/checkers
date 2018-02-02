@@ -123,8 +123,8 @@ fun testNets(nets: List<String>): String {
 }
 
 fun main(args: Array<String>) {
-    val myFolder = File("nets/winners")
-    val files = myFolder.listFiles()
-    val nets = files.map { "nets/winners/${it.name}"}
+    val best = File("nets/60-40-20/best")
+    val winners = File("nets/winners")
+    val nets = listOf(best.listFiles().map { it.absolutePath }, winners.listFiles().map { it.absolutePath }).flatMap { it }
     testNets(nets)
 }

@@ -3,7 +3,7 @@ import java.io.FileWriter
 fun teachNet(layersCapacity: List<Int>, populationSize: Int,
              epochSize: Int, mutantRate: Double, dir: String): Network {
     val savePerEpoch = 5.takeIf { epochSize > 5 } ?: epochSize
-    with(EvolutionCheckers(populationSize, layersCapacity, 1, 50, 0, mutantRate, dir, savePerEpoch)) {
+    with(EvolutionCheckers(populationSize, layersCapacity, 3, 50, 0, mutantRate, dir, savePerEpoch)) {
         return evolute(epochSize).nw
     }
 }

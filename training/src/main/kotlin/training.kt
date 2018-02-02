@@ -1,4 +1,5 @@
 import java.io.File
+import java.util.*
 
 /**
  * Обучение нейронной сети при помощи эволюционного алгоритма игре Шашки
@@ -15,7 +16,7 @@ class EvolutionCheckers(populationSize: Int,
                         mutantRate: Double = 0.1,
                         dir: String = "nets/",
                         private val savePerEpoch: Int = 5
-                        ) : AbstractEvolution(populationSize, scale, mutantRate = mutantRate) {
+                        ) : AbstractEvolution(populationSize, scale, mutantRate) {
     private var curEpoch = 0
     private lateinit var population: List<Individual>
     val folder = dir + layersCapacity.map { it.toString() }.reduce { acc, s -> "$acc-$s" }
@@ -71,6 +72,15 @@ class EvolutionCheckers(populationSize: Int,
         return if (white > Math.abs(black)) 0 else 1
     }
 
+    override fun saveBestNet(nw: Network) {
+        val bestFolder = "$folder/best/"
+        if (File(bestFolder).mkdir()) {
+            println("Создаю каталог $bestFolder")
+        }
+        println("Сохраняю в лучшие сети")
+        NetworkIO().save(nw, "$bestFolder/${Date().time}.net")
+    }
+
     // переопределяем, чтобы контролировать процесс обучения
     override fun evoluteEpoch(initPopulation: List<Individual>): List<Individual> {
         println("эпоха ${++curEpoch}")
@@ -93,5 +103,5 @@ class EvolutionCheckers(populationSize: Int,
 }
 
 fun main(args: Array<String>) {
-    teachNet(listOf(60, 40, 10), 20, 10000, 0.1, "nets/")
+    teachNet(listOf(60, 40, 20), 80, 10000, 0.002, "nets/")
 }

@@ -20,10 +20,11 @@ data class Individual(val nw: Network, var rate: Int=0)
 abstract class AbstractEvolution(
         private val populationSize: Int,
         private val scale: Int,
-        private val mutantRate: Double=0.1
+        private val initMutantRate: Double=0.1
 ) {
     private var crossoverRate = 0.5
     private val random = Random()
+    private var mutantRate = initMutantRate
 
     /**
      * Запуск эволюции.
@@ -44,12 +45,8 @@ abstract class AbstractEvolution(
      * Условия размножения (mutantRate и crossoverRate) изменяются от эпохи к эпахе
      **/
     open fun evoluteEpoch(initPopulation: List<Individual>): List<Individual> {
-        var population = competition(initPopulation)
-        population = nextGeneration(population) // генерируем следующее поколение особей
-        // случайным образом регулируем эволюцию для следующего поколения
-//        mutantRate = random.nextDouble() * 0.5 // в пределах [0; 0.5]
-        crossoverRate = random.nextDouble() // -//- [0; 1.0]
-        return population
+        val population = competition(initPopulation)
+        return nextGeneration(population) // генерируем следующее поколение особей
     }
 
     /**
@@ -104,17 +101,32 @@ abstract class AbstractEvolution(
      */
     open fun nextGeneration(population: List<Individual>): List<Individual> {
         val survivors = population.take(populationSize / 2)
+        val dif = netsDifferent(survivors.map { it.nw })
+        // если в генах сетей мало отличий, то удваиваем скорость мутаций, иначе возвращаем к обычному
+        mutantRate = if (dif > 0.3 || (dif > 0.1 && mutantRate == initMutantRate)) initMutantRate else mutantRate * 2
+        if (dif < 0.1) saveBestNet(survivors.first().nw)
+        inform(dif)
         val parents = selection(survivors)
         val children = parents.parallelStream().map { cross(it) }.collect(Collectors.toList())
         return survivors.union(children).toList()
     }
 
+    open fun saveBestNet(nw: Network) {}
+
+    open fun inform(dif: Double) {
+        println("различие ${(dif*1000).toInt() / 10} %")
+        println("мутация ${mutantRate*100} %")
+    }
+
     /**
      * Разбиваем популяцию по парам для их участия в скрещивании
      */
-    private fun selection(players: List<Individual>) = (1..populationSize)
-            .map { players[random.nextInt(players.size)] }
-            .chunked(2).map { it[0] to it[1] }
+    private fun selection(players: List<Individual>): List<Pair<Individual, Individual>> {
+        val bestRate = players.maxBy { it.rate }!!.rate
+        val bestPlayers = players.filter { it.rate == bestRate }
+        return (1..populationSize/2)
+                .map { players[random.nextInt(players.size)] to bestPlayers[random.nextInt(bestPlayers.size)] }
+    }
 
     /**
      * Выполняем скрещивание.
@@ -160,4 +172,21 @@ abstract class AbstractEvolution(
 
     /** соревнование двух сетей, на выходе начисляются очки */
     abstract fun play(a: Network, b: Network): Int
+
+    fun netsDifferent(nets: List<Network>): Double {
+        val extractWeights: (Network) -> List<Double> = {
+            nw: Network -> nw.layers.flatMap { it.neurons }.flatMap { it.weights }
+        }
+        val bestWeights = extractWeights(nets.first())
+        val difs = mutableListOf<Double>()
+        (1 until nets.size).map { nets[it] }.forEach {
+            val weights = extractWeights(it)
+            var difsCount = 0
+            weights.forEachIndexed { i, w ->
+                if (w != bestWeights[i]) difsCount++
+            }
+            difs.add(difsCount*1.0/bestWeights.size)
+        }
+        return difs.average()
+    }
 }

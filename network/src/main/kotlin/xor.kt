@@ -9,7 +9,7 @@ import kotlin.system.measureTimeMillis
  * [+1; +1] => -1,
  * где -1 = ЛОЖЬ, +1 = ИСТИНА
  */
-class EvolutionXOR(populationSize: Int, scale: Int, mutantRate: Double=0.1): AbstractEvolution(populationSize, scale, mutantRate = mutantRate) {
+class EvolutionXOR(populationSize: Int, scale: Int, mutantRate: Double=0.1): AbstractEvolution(populationSize, scale, mutantRate) {
     private val testData: Map<List<Double>, Double> = generateTestData()
     lateinit var population: List<Individual>
 
@@ -19,7 +19,7 @@ class EvolutionXOR(populationSize: Int, scale: Int, mutantRate: Double=0.1): Abs
                 .chunked(2).mapIndexed { i, xi -> xi to answer[i] }.toMap()
     }
 
-    override fun createNet() = Network(2, 1)
+    override fun createNet() = Network(16, 8, 4, 2, 1)
 
     /** соревнование игрока (сети) "a" с игроком (сетью) "b"
      * если пара игроков образована из одного игрока возвращаем 0 очков
@@ -57,7 +57,7 @@ class EvolutionXOR(populationSize: Int, scale: Int, mutantRate: Double=0.1): Abs
 
 fun main(args: Array<String>) {
     val time = measureTimeMillis {
-        val evolution = EvolutionXOR(40, 10, 0.1)
+        val evolution = EvolutionXOR(20, 3, 0.01)
         val nw = evolution.evolute(200).nw
         evolution.test(nw)
         evolution.population.forEachIndexed { index, individual ->

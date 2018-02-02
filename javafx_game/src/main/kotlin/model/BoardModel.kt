@@ -20,7 +20,7 @@ class BoardModel(private val desk: BoardPane) {
     var from: String? = null
     var stepCounter = 0.0
     private val stepLimit = 50
-    private val bot = Player(NetworkIO().load("nets/60-40-10/save0.net")!!, 2, 3.0, true)
+    private val bot = Player(NetworkIO().load("/home/melkor/Документы/checkers/nets/60-40-20/best/1517549300370.net")!!, 2, 3.0, true)
     var animationClose = false
     private var moves: List<String>
 

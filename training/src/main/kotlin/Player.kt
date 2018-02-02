@@ -25,7 +25,7 @@ class Player(val nw: Network, private val predicateMoves: Int = 2,
         val goodPairs = filterGoodSteps(pairs, color)
         val list = goodPairs.parallelStream().map {
             it to play(checkerboard, color, predicateMoves, it.first) }.toList()
-        val max = list.maxBy { it.second }!!.second
+        val max = list.maxBy { it.second }?.second
         val l = list.filter { it.second == max }.map { it.first }
         val step = selectBestStep(l, color, debug)
         if (debug) {
@@ -126,11 +126,10 @@ class Player(val nw: Network, private val predicateMoves: Int = 2,
     private fun filterGoodSteps(steps: List<Pair<String, Double>>, color: Int): List<Pair<String, Double>> {
         if (steps.size < 3) return steps
         val median = steps.map { it.second }.median()
-        val dif = 1.25 // отклонение от медианы
         return if (color == 0) {
-            steps.filter { it.second >= median/dif }
+            steps.filter { it.second >= median }
         } else {
-            steps.filter { it.second <= median*dif }
+            steps.filter { it.second <= median }
         }
     }
 }
