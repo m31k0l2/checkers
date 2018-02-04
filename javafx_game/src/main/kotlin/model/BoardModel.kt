@@ -8,6 +8,7 @@ import javafx.scene.shape.Path
 import javafx.scene.text.Font
 import javafx.scene.text.Text
 import javafx.util.Duration
+import java.io.File
 
 
 class BoardModel(private val desk: BoardPane) {
@@ -20,9 +21,15 @@ class BoardModel(private val desk: BoardPane) {
     var from: String? = null
     var stepCounter = 0.0
     private val stepLimit = 50
-    private val bot = Player(NetworkIO().load("/home/melkor/Документы/checkers/nets/60-40-20/best/1517549300370.net")!!, 2, 3.0, true)
+    private val netPath = getPath("nets/16-4/")
+    private val bot = Player(NetworkIO().load(netPath)!!, 2, 3.0, true)
     var animationClose = false
     private var moves: List<String>
+
+    private fun getPath(folderName: String): String {
+        val dir = File(folderName)
+        return dir.listFiles().sorted().last().toString()
+    }
 
     init {
         moves = game.nextMoves()

@@ -98,7 +98,7 @@ suspend fun test(name1: String, name2: String, counter: AtomicInteger, netsSize:
     return result
 }
 
-fun testNets(nets: List<String>): String {
+fun testNets(nets: List<String>): List<Pair<String, Long>> {
     val counter = AtomicInteger(0)
     return runBlocking {
         val results =
@@ -118,13 +118,25 @@ fun testNets(nets: List<String>): String {
             if (index == 0) println("~~~")
             println("${pair.first}: ${Math.round(pair.second / (nets.size - 1))}%")
             return@mapIndexed pair.first to Math.round(pair.second / (nets.size - 1))
-        }.maxBy { it.second }!!.first
+        }
     }
 }
 
 fun main(args: Array<String>) {
-    val best = File("nets/60-40-20/best")
-    val winners = File("nets/winners")
-    val nets = listOf(best.listFiles().map { it.absolutePath }, winners.listFiles().map { it.absolutePath }).flatMap { it }
-    testNets(nets)
+    val folders = listOf("nets/10/best")
+    testAndClear(folders)
+}
+
+fun testAndClear(folders: List<String>) {
+    do {
+        val nets = folders.map { File(it) }.flatMap { it.listFiles().toList() }.map { it.absolutePath }.sorted()
+        if (nets.size == 1) break
+        val results = testNets(nets)
+        val fnames = results.filter { it.second < 50 }.map { it.first }
+        var isDelete = false
+        fnames.forEach {
+            val file = File(it)
+            if (file.delete()) isDelete = true
+        }
+    } while (isDelete)
 }

@@ -15,7 +15,7 @@ class EvolutionCheckers(populationSize: Int,
                         private val predicateMoves: Int = 2,
                         mutantRate: Double = 0.1,
                         dir: String = "nets/",
-                        private val savePerEpoch: Int = 5
+                        private val savePerEpoch: Int = 10
                         ) : AbstractEvolution(populationSize, scale, mutantRate) {
     private var curEpoch = 0
     private lateinit var population: List<Individual>
@@ -37,7 +37,7 @@ class EvolutionCheckers(populationSize: Int,
     }
 
     override fun createNet(): Network {
-        val list = listOf(listOf(91), layersCapacity, listOf(1)).flatMap { it }
+        val list = listOf(listOf(3, 20), layersCapacity, listOf(1)).flatMap { it }
         return Network(*list.toIntArray())
     }
 
@@ -87,7 +87,6 @@ class EvolutionCheckers(populationSize: Int,
         val start = System.nanoTime()
         population = super.evoluteEpoch(initPopulation)
         if (curEpoch % savePerEpoch == 0) saveNets()
-        println(population.map { it.nw.id to it.rate }.subList(0, population.size / 2))
         val fin = System.nanoTime()
         println("Время: ${(fin-start)/1_000_000} мс\n")
         return population
@@ -99,9 +98,18 @@ class EvolutionCheckers(populationSize: Int,
         with(NetworkIO()) {
             population.forEachIndexed { i, (nw, _) -> save(nw, "$folder/save$i.net") }
         }
+        if (curEpoch % 100 == 0) testAndClear(listOf("$folder/best/"))
+    }
+}
+
+fun teachNet(layersCapacity: List<Int>, populationSize: Int,
+             epochSize: Int, mutantRate: Double, dir: String): Network {
+    val savePerEpoch = 10.takeIf { epochSize > 10 } ?: epochSize
+    with(EvolutionCheckers(populationSize, layersCapacity, 1, 50, 0, mutantRate, dir, savePerEpoch)) {
+        return evolute(epochSize).nw
     }
 }
 
 fun main(args: Array<String>) {
-    teachNet(listOf(60, 40, 20), 80, 10000, 0.002, "nets/")
+    teachNet(listOf(16, 4), 40, 10000, 0.001, "nets/")
 }

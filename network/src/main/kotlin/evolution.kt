@@ -3,7 +3,7 @@ import java.util.stream.Collectors
 
 /**
  * Модель особи.
- * [nw] - нейронная сеть, [rate] - рэйтинг выживаемости
+ * [nw] - нейронная сеть, [rate] - рейтинг выживаемости
  */
 data class Individual(val nw: Network, var rate: Int=0)
 
@@ -30,7 +30,7 @@ abstract class AbstractEvolution(
      * Запуск эволюции.
      * [epochSize] - количество поколений которые участвуют в эволюции (эпох).
      * Создаём популяцию размером populationSize
-     * Выполняем эволюцию популяци от эпохи к эпохе
+     * Выполняем эволюцию популяции от эпохи к эпохе
      */
     fun evolute(epochSize: Int): Individual {
         var population = generatePopulation(populationSize)
@@ -42,7 +42,7 @@ abstract class AbstractEvolution(
      * эволюция популяции за одну эпоху
      * среди популяции проводим соревнование
      * По итогам генерируется новое поколение для следующей эпохи
-     * Условия размножения (mutantRate и crossoverRate) изменяются от эпохи к эпахе
+     * Условия размножения (mutantRate и crossoverRate) изменяются от эпохи к эпохе
      **/
     open fun evoluteEpoch(initPopulation: List<Individual>): List<Individual> {
         val population = competition(initPopulation)
@@ -69,7 +69,7 @@ abstract class AbstractEvolution(
      * Выходом функции является популяция, в которой каждая особь отсортирована в порядке своей выживаемости
      */
     private fun competition(initPopulation: List<Individual>, playersInGroup: Int = 4): List<Individual> {
-        val population = initPopulation.map { Individual(it.nw) }.shuffled()
+        val population = initPopulation.map { it.nw }.map { Individual(it) }.shuffled()
         population.chunked(playersInGroup).forEach { players ->
             playGroup(players)
         }
@@ -98,6 +98,9 @@ abstract class AbstractEvolution(
      * Одна пара рождает одного ребёнка, таким образом получаем, что в итоге количество скрещивающихся особей будет
      * соответствовать рождённым особям.
      * Из числа родителей и потомства составляем новое поколение популяции
+     * Для исключения вырождения популяции можем удваивать на время мутацию. Под вырождением понимаем критическое
+     * совпадение генов у всех особей популяции. Это означает, что созданный шаблон при исходных наборах гена оптимален.
+     * Этот оптимальный шаблон сохраним, для дальнейшего сравнения и использования
      */
     open fun nextGeneration(population: List<Individual>): List<Individual> {
         val survivors = population.take(populationSize / 2)
@@ -105,12 +108,13 @@ abstract class AbstractEvolution(
         // если в генах сетей мало отличий, то удваиваем скорость мутаций, иначе возвращаем к обычному
         mutantRate = if (dif > 0.3 || (dif > 0.1 && mutantRate == initMutantRate)) initMutantRate else mutantRate * 2
         if (dif < 0.1) saveBestNet(survivors.first().nw)
-        inform(dif)
+        inform(dif) // информируем терминал об изменениях
         val parents = selection(survivors)
         val children = parents.parallelStream().map { cross(it) }.collect(Collectors.toList())
         return survivors.union(children).toList()
     }
 
+    // сохраняем сеть лучший шаблон
     open fun saveBestNet(nw: Network) {}
 
     open fun inform(dif: Double) {
@@ -144,7 +148,7 @@ abstract class AbstractEvolution(
         val childGens = firstParentGens.mapIndexed { l, layer ->
             layer.mapIndexed { n, neuron -> neuron.mapIndexed { w, gen ->
                 if (random.nextDouble() < mutantRate) {
-                    (2*random.nextDouble()-1)*scale
+                    Math.round((2*random.nextDouble()-1)*scale*10)/10.0
                 } else gen.takeIf { random.nextDouble() < crossoverRate } ?: secondParentGens[l][n][w] }
             }
         }
@@ -173,6 +177,7 @@ abstract class AbstractEvolution(
     /** соревнование двух сетей, на выходе начисляются очки */
     abstract fun play(a: Network, b: Network): Int
 
+    /** определяет усреднённое различие между сетями **/
     fun netsDifferent(nets: List<Network>): Double {
         val extractWeights: (Network) -> List<Double> = {
             nw: Network -> nw.layers.flatMap { it.neurons }.flatMap { it.weights }

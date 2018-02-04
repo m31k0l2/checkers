@@ -19,13 +19,13 @@ class EvolutionXOR(populationSize: Int, scale: Int, mutantRate: Double=0.1): Abs
                 .chunked(2).mapIndexed { i, xi -> xi to answer[i] }.toMap()
     }
 
-    override fun createNet() = Network(16, 8, 4, 2, 1)
+    override fun createNet() = Network(2, 1)
 
     /** соревнование игрока (сети) "a" с игроком (сетью) "b"
      * если пара игроков образована из одного игрока возвращаем 0 очков
      * в случае победы игрока "a" возвращаем 1 очко
      * в случае ничьи 0 очков
-     * в случае проигрыша игрока "d" возвращем -2 очка
+     * в случае проигрыша игрока "d" возвращаем -2 очка
      * Выбор очков обосновывается следующими соображениями: наказание должно быть в два раза сильнее чем поощерение.
      * Победа или проигрыш определяется величиной ошибки допущенной при решении задачи XOR
      */
@@ -53,12 +53,16 @@ class EvolutionXOR(populationSize: Int, scale: Int, mutantRate: Double=0.1): Abs
         population = super.evoluteEpoch(initPopulation)
         return population
     }
+
+    override fun inform(dif: Double) {
+
+    }
 }
 
 fun main(args: Array<String>) {
     val time = measureTimeMillis {
-        val evolution = EvolutionXOR(20, 3, 0.01)
-        val nw = evolution.evolute(200).nw
+        val evolution = EvolutionXOR(20, 10, 0.1)
+        val nw = evolution.evolute(500).nw
         evolution.test(nw)
         evolution.population.forEachIndexed { index, individual ->
             NetworkIO().save(individual.nw, "nets/xor/save$index.net")
