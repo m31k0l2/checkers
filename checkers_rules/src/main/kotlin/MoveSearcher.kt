@@ -85,7 +85,7 @@ class MoveSearcher(private val currentColor: Int, private val board: Checkerboar
 
     /**
      * Поиск атакующих ходов
-     * Выполняется рекурсивно, ходы аккамулируются в передоваемом хранилище [allMoves]
+     * Выполняется рекурсивно, ходы аккамулируются в передаваемом хранилище [allMoves]
      * Текущая позиция задаётся ходом [initMove], то что он начальный определяется установками хода initMove:
      * [from = null, to = attackPosition]
      */

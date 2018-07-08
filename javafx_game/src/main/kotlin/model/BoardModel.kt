@@ -10,6 +10,11 @@ import javafx.scene.text.Text
 import javafx.util.Duration
 import java.io.File
 
+fun bot(state: Checkerboard, color: Int): String {
+    val node = alphaBetaSearch(Node(state, color = color))
+    println(node?.value)
+    return node!!.action
+}
 
 class BoardModel(private val desk: BoardPane) {
     val fields = mutableMapOf<String, BoardField>()
@@ -21,15 +26,15 @@ class BoardModel(private val desk: BoardPane) {
     var from: String? = null
     var stepCounter = 0.0
     private val stepLimit = 50
-    private val netPath = getPath("nets/16-4/")
-    private val bot = Player(NetworkIO().load(netPath)!!, 2, 3.0, true)
+//    private val netPath = getPath("nets/16-4/")
+//    private val bot = Player(NetworkIO().load(netPath)!!, 2, 3.0, true)
     var animationClose = false
     private var moves: List<String>
 
-    private fun getPath(folderName: String): String {
-        val dir = File(folderName)
-        return dir.listFiles().sorted().last().toString()
-    }
+//    private fun getPath(folderName: String): String {
+//        val dir = File(folderName)
+//        return dir.listFiles().sorted().last().toString()
+//    }
 
     init {
         moves = game.nextMoves()
@@ -68,10 +73,11 @@ class BoardModel(private val desk: BoardPane) {
         Thread(Runnable {
             Thread.sleep(600L)
             if (moves.isEmpty()) return@Runnable
-            val step = bot.selectMove(game.checkerboard, game.currentColor, moves)
-            Platform.runLater({
+//            val step = bot.selectMove(game.checkerboard, game.currentColor, moves)
+            Platform.runLater {
+                val step = bot(game.checkerboard, game.currentColor)
                 nextStep(step)
-            })
+            }
         }).start()
     }
 
@@ -134,7 +140,7 @@ class BoardModel(private val desk: BoardPane) {
             else " Черные\nпобедили"
             fields.forEach { _, boardField -> boardField.onMouseClicked = null }
             if (color == botColor) {
-                NetworkIO().save(bot.nw, "nets/winners/${bot.nw.hashCode()}.net")
+//                NetworkIO().save(bot.nw, "nets/winners/${bot.nw.hashCode()}.net")
             }
         } else {
             text = "\n  ничья"

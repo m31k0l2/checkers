@@ -21,9 +21,9 @@
 //        queens?.forEach { queen(it) }
 //    }
 //
-//    private fun go(color: Int, whiteCheckers: List<String>, blackCheckers: List<String>, queens: List<String>?, move: String): List<String> = with(GameController()) {
+//    private fun go(color: Int, whiteCheckers: List<String>, blackCheckers: List<String>, queens: List<String>?, action: String): List<String> = with(GameController()) {
 //        init(color, whiteCheckers, blackCheckers, queens)
-//        go(move)
+//        go(action)
 //        val white = checkerboard.getCheckers(0).map { it.toString() }.reduceRight { a, b -> "$a,$b" }
 //        val black = checkerboard.getCheckers(1).map { it.toString() }.reduceRight { a, b -> "$a,$b" }
 //        listOf(white, black)
