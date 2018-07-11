@@ -16,26 +16,7 @@ class Player(val nw: Network, private val predicateMoves: Int = 2,
      * Если [debug] == true, то для отладки показывает, как думает ИИ и печатает выбранный им ход
      */
     fun selectMove(checkerboard: Checkerboard, color: Int, steps: List<String>): String {
-        if (steps.size == 1) return steps.first()
-        val pairs = stepsToPairs(steps, checkerboard)
-        if (predicateMoves == 0) {
-            return if (color == 0) pairs.sortedBy { it.second }.last().first
-            else pairs.sortedBy { it.second }.first().first
-        }
-        val goodPairs = filterGoodSteps(pairs, color)
-        val list = goodPairs.parallelStream().map {
-            it to play(checkerboard, color, predicateMoves, it.first) }.toList()
-        val max = list.maxBy { it.second }?.second
-        val l = list.filter { it.second == max }.map { it.first }
-        val step = selectBestStep(l, color, debug)
-        if (debug) {
-            println("все ходы: $steps")
-            println("ожидания: $pairs")
-            println("лучшие ожидания: $goodPairs")
-            println("ходы с предполагаемой выгодой: $list")
-            println("лучший ход: $step")
-        }
-        return step
+        TODO()
     }
 
     /**
@@ -55,25 +36,7 @@ class Player(val nw: Network, private val predicateMoves: Int = 2,
      * Результат определяется как разность очков между белыми и чёрными
      */
     private fun play(checkerboard: Checkerboard, initColor: Int, count: Int, initStep: String): Int {
-        val game = GameController(checkerboard.clone())
-        game.currentColor = initColor
-        lateinit var steps: List<Pair<String, Double>>
-        for (i in 0 until count * 2) {
-            val step = if (i == 0) initStep else {
-                steps = filterGoodSteps(stepsToPairs(game.nextMoves(), game.checkerboard), game.currentColor)
-                if (steps.isEmpty()) {
-                    return if (game.currentColor != initColor) 100 - i
-                    else -100 + i
-                }
-                selectBestStep(steps, game.currentColor)
-            }
-            game.go(step)
-            game.currentColor = 1 - game.currentColor
-        }
-        val whiteCount = game.checkerboard.encodeToVector().filter { it > 0 }.count()
-        val blackCount = game.checkerboard.encodeToVector().filter { it < 0 }.count()
-        return if (initColor == 0) whiteCount - blackCount
-        else blackCount - whiteCount
+        TODO()
     }
 
     /**
@@ -109,12 +72,6 @@ class Player(val nw: Network, private val predicateMoves: Int = 2,
         }
         return step.first
     }
-
-    private fun stepsToPairs(steps: List<String>, checkerboard: Checkerboard) = steps.parallelStream().map {
-        val game = GameController(checkerboard.clone())
-        game.go(it)
-        it to nw.cnn(game.checkerboard.encodeToVector())
-    }.toList()
 
     private fun filterGoodSteps(steps: List<Pair<String, Double>>, color: Int): List<Pair<String, Double>> {
         if (steps.size < 3) return steps

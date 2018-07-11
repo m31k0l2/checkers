@@ -16,11 +16,11 @@ import javafx.stage.Stage
 
 @Suppress("JAVA_CLASS_ON_COMPANION")
 class Main : Application() {
-    lateinit var board: BoardPane
-    lateinit var numberPaneLeft: Pane
-    lateinit var numberPaneRight: Pane
-    lateinit var lettersTopPane: Pane
-    lateinit var lettersBottomPane: Pane
+    private lateinit var board: BoardPane
+    private lateinit var numberPaneLeft: Pane
+    private lateinit var numberPaneRight: Pane
+    private lateinit var lettersTopPane: Pane
+    private lateinit var lettersBottomPane: Pane
     private val letters = listOf("a", "b", "c", "d", "e", "f", "g", "h")
 
     override fun start(primaryStage: Stage) {

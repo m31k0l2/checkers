@@ -42,36 +42,36 @@ fun play(nw1: Network, nw2: Network, error: Double = 0.0, debug: Boolean = false
 }
 
 fun play(net1: String, net2: String, error: Double = 0.0, debug: Boolean = false): String {
-    val game = GameController()
-    var moves: List<String>
-    val nw1 = NetworkIO().load(net1)!!
-    val nw2 = NetworkIO().load(net2)!!
-    val white = Player(nw1, 2, error, debug)
-    val black = Player(nw2, 2, error, debug)
-    var curStep = 0
-    while (curStep++ < stepLimit) {
-        if (debug) game.print()
-        moves = game.nextMoves()
-        if (moves.isEmpty()) {
-            return if (game.currentColor == 0) {
-                if (debug) println("$net2 победила")
-                net2
-            } else {
-                if (debug) println("$net1 победила")
-                net1
-            }
-        }
-        if (curStep == stepLimit) {
-            return if (game.checkerboard.encodeToVector().sum() > 0) {
-                if (debug) println("$net1 победила")
-                net1
-            } else {
-                if (debug) println("$net2 победила")
-                net2
-            }
-        }
-        step(game, white.takeIf { game.currentColor == 0 } ?: black, moves)
-    }
+//    val game = GameController()
+//    var moves: List<String>
+//    val nw1 = NetworkIO().load(net1)!!
+//    val nw2 = NetworkIO().load(net2)!!
+//    val white = Player(nw1, 2, error, debug)
+//    val black = Player(nw2, 2, error, debug)
+//    var curStep = 0
+//    while (curStep++ < stepLimit) {
+//        if (debug) game.print()
+//        moves = game.nextMoves()
+//        if (moves.isEmpty()) {
+//            return if (game.currentColor == 0) {
+//                if (debug) println("$net2 победила")
+//                net2
+//            } else {
+//                if (debug) println("$net1 победила")
+//                net1
+//            }
+//        }
+//        if (curStep == stepLimit) {
+//            return if (game.checkerboard.encodeToVector().sum() > 0) {
+//                if (debug) println("$net1 победила")
+//                net1
+//            } else {
+//                if (debug) println("$net2 победила")
+//                net2
+//            }
+//        }
+//        step(game, white.takeIf { game.currentColor == 0 } ?: black, moves)
+//    }
     return ""
 }
 

@@ -9,32 +9,27 @@ import javafx.scene.text.Font
 import javafx.scene.text.Text
 import javafx.util.Duration
 import java.io.File
-
 fun bot(state: Checkerboard, color: Int): String {
-    val node = alphaBetaSearch(Node(state, color = color))
-    println(node?.value)
-    return node!!.action
+    val nodes = alphaBetaSearch(Node(state, color = color))!!
+    val pairs = nodes.map { it to nw.activate(it.state, 15.0) }
+    val (node, rate) = if (color == 0) pairs.maxBy { it.second }!! else pairs.minBy { it.second }!!
+    println("${node.value} [$rate]")
+    return node.action
 }
+val nw = CNetwork().load("nets/win.net")!!
 
 class BoardModel(private val desk: BoardPane) {
     val fields = mutableMapOf<String, BoardField>()
     val checkers = mutableMapOf<String, BoardChecker>()
     var botColor = 1
-    var game = GameController()
-    var activeFields: Set<String>
-    var availableMoveFields: Set<String>? = null
-    var from: String? = null
+    private var game = GameController()
+    private var activeFields: Set<String>
+    private var availableMoveFields: Set<String>? = null
+    private var from: String? = null
     var stepCounter = 0.0
     private val stepLimit = 50
-//    private val netPath = getPath("nets/16-4/")
-//    private val bot = Player(NetworkIO().load(netPath)!!, 2, 3.0, true)
-    var animationClose = false
+    private var animationClose = false
     private var moves: List<String>
-
-//    private fun getPath(folderName: String): String {
-//        val dir = File(folderName)
-//        return dir.listFiles().sorted().last().toString()
-//    }
 
     init {
         moves = game.nextMoves()
@@ -73,7 +68,6 @@ class BoardModel(private val desk: BoardPane) {
         Thread(Runnable {
             Thread.sleep(600L)
             if (moves.isEmpty()) return@Runnable
-//            val step = bot.selectMove(game.checkerboard, game.currentColor, moves)
             Platform.runLater {
                 val step = bot(game.checkerboard, game.currentColor)
                 nextStep(step)
@@ -139,9 +133,6 @@ class BoardModel(private val desk: BoardPane) {
             text = if (color == 0) "   Белые\nпобедили"
             else " Черные\nпобедили"
             fields.forEach { _, boardField -> boardField.onMouseClicked = null }
-            if (color == botColor) {
-//                NetworkIO().save(bot.nw, "nets/winners/${bot.nw.hashCode()}.net")
-            }
         } else {
             text = "\n  ничья"
         }

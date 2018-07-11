@@ -1,11 +1,13 @@
+import java.io.File
 import java.util.*
 import java.util.stream.Collectors
+import kotlin.math.max
 
 /**
  * Модель особи.
  * [nw] - нейронная сеть, [rate] - рейтинг выживаемости
  */
-data class Individual(val nw: Network, var rate: Int=0)
+data class Individual(val nw: Network, var rate: Int)
 
 /**
  * [populationSize] - размер популяции
@@ -17,14 +19,23 @@ data class Individual(val nw: Network, var rate: Int=0)
  * [mutantRate] - вероятность мутации генов, не должно быть сильно большим значением, основную роль в эволюции
  * должно играть скрещивание
  */
-abstract class AbstractEvolution(
-        private val populationSize: Int,
-        private val scale: Int,
-        private val initMutantRate: Double=0.1
+abstract class NetEvolution(
+        var maxMutateRate: Double=0.2,
+        private val scale: Int=1
 ) {
-    private var crossoverRate = 0.5
     private val random = Random()
-    private var mutantRate = initMutantRate
+    var mutantRate = 1.0
+    var genMutateRate = 0.05
+    lateinit var mutantStrategy: (epoch: Int, epochSize: Int) -> Double
+    var trainLayers = emptyList<Int>()
+    private var mutateRate = 0.1
+    private var alpha: Double = 1.0
+
+    init {
+        if (File("nets/").mkdir()) {
+            println("Создаю каталог nets/")
+        }
+    }
 
     /**
      * Запуск эволюции.
@@ -32,10 +43,22 @@ abstract class AbstractEvolution(
      * Создаём популяцию размером populationSize
      * Выполняем эволюцию популяции от эпохи к эпохе
      */
-    fun evolute(epochSize: Int): Individual {
-        var population = generatePopulation(populationSize)
-        (0 until epochSize).forEach { population = evoluteEpoch(population) }
-        return population.first()
+
+    fun evolute(epochSize: Int, initPopulation: Set<Network>, alpha: Double): Set<Network> {
+        if (trainLayers.isEmpty()) trainLayers = (0 until initPopulation.first().layers.size).toList()
+        this.alpha = alpha
+        var population = initPopulation
+        mutateRate = max((Random().nextDouble()*maxMutateRate*100).toInt()/100.0, 0.005)
+        (0 until epochSize).forEach { curEpoch ->
+            println("эпоха $curEpoch")
+            val start = System.nanoTime()
+            mutantRate = mutantStrategy(curEpoch, epochSize)
+            population = evoluteEpoch(population)
+            val fin = System.nanoTime()
+            println("мутация ${(mutantRate * 1000).toInt() / 10.0} % / $mutateRate")
+            println("Время: ${(fin - start) / 1_000_000} мс\n")
+        }
+        return population
     }
 
     /**
@@ -44,48 +67,12 @@ abstract class AbstractEvolution(
      * По итогам генерируется новое поколение для следующей эпохи
      * Условия размножения (mutantRate и crossoverRate) изменяются от эпохи к эпохе
      **/
-    open fun evoluteEpoch(initPopulation: List<Individual>): List<Individual> {
-        val population = competition(initPopulation)
-        return nextGeneration(population) // генерируем следующее поколение особей
-    }
 
-    /**
-     * Создаёт популяцию особей заданного размера [size]
-     */
-    open fun generatePopulation(size: Int) = (0 until size).map { createIndividual() }
-
-    private fun createIndividual() = Individual(createNet())
-
-    /**
-     * Задаётся топология сети
-     */
-    abstract fun createNet(): Network
-
-    /**
-     * Проводит соревнование внутри популяции. На выходе вычисляет поколение
-     * Каждая особь соревнуется со случайно отобранными в количестве [playersInGroup] особями-конкурентами.
-     * По итогам соревнования для каждой особи определяется величина score.
-     * Score - сумма очков полученных по итогам игры двух особей (эта же величина характеризует выживаемость особи).
-     * Выходом функции является популяция, в которой каждая особь отсортирована в порядке своей выживаемости
-     */
-    private fun competition(initPopulation: List<Individual>, playersInGroup: Int = 4): List<Individual> {
-        val population = initPopulation.map { it.nw }.map { Individual(it) }.shuffled()
-        population.chunked(playersInGroup).forEach { players ->
-            playGroup(players)
-        }
-        return population.sortedBy { it.rate }.reversed()
-    }
-
-    private fun playGroup(group: List<Individual>) {
-        val n = group.size - 1
-        (0 until n).forEach { i -> (i + 1..n).forEach { play(group[i], group[it]) } }
-    }
-
-    private fun play(player1: Individual, player2: Individual) {
-        val players = listOf(player1, player2).shuffled()
-        val score = play(players[0].nw, players[1].nw)
-        players[0].rate += score
-        players[1].rate += if (score < 0) 1 else -2
+    private fun evoluteEpoch(initPopulation: Set<Network>): Set<Network> {
+        val population = tournament(initPopulation)
+        println(population)
+        println("winner rate: " + population.first().rate)
+        return nextGeneration(population)
     }
 
     /**
@@ -102,96 +89,86 @@ abstract class AbstractEvolution(
      * совпадение генов у всех особей популяции. Это означает, что созданный шаблон при исходных наборах гена оптимален.
      * Этот оптимальный шаблон сохраним, для дальнейшего сравнения и использования
      */
-    open fun nextGeneration(population: List<Individual>): List<Individual> {
-        val survivors = population.take(populationSize / 2)
-        val dif = netsDifferent(survivors.map { it.nw })
-        // если в генах сетей мало отличий, то удваиваем скорость мутаций, иначе возвращаем к обычному
-        mutantRate = if (dif > 0.3 || (dif > 0.1 && mutantRate == initMutantRate)) initMutantRate else mutantRate * 2
-        if (dif < 0.1) saveBestNet(survivors.first().nw)
-        inform(dif) // информируем терминал об изменениях
+    private fun nextGeneration(survivors: List<Individual>): Set<Network> {
         val parents = selection(survivors)
-        val children = parents.parallelStream().map { cross(it) }.collect(Collectors.toList())
-        return survivors.union(children).toList()
+        var offspring = createChildren(parents)
+        offspring = offspring.map {
+            if (random.nextDouble() < mutantRate) mutate(it) else it
+        }
+        return survivors.map { it.nw }.union(offspring)
     }
 
-    // сохраняем сеть лучший шаблон
-    open fun saveBestNet(nw: Network) {}
-
-    open fun inform(dif: Double) {
-        println("различие ${(dif*1000).toInt() / 10} %")
-        println("мутация ${mutantRate*100} %")
-    }
+    private fun createChildren(parents: List<Pair<Individual, Individual>>) = parents.parallelStream().map { cross(it) }.collect(Collectors.toList())!!
 
     /**
      * Разбиваем популяцию по парам для их участия в скрещивании
      */
-    private fun selection(players: List<Individual>): List<Pair<Individual, Individual>> {
-        val bestRate = players.maxBy { it.rate }!!.rate
-        val bestPlayers = players.filter { it.rate == bestRate }
-        return (1..populationSize/2)
-                .map { players[random.nextInt(players.size)] to bestPlayers[random.nextInt(bestPlayers.size)] }
-    }
-
-    /**
-     * Выполняем скрещивание.
-     * Гены потомка получаются либо путём мутации, либо путём скрещивания (определяется случайностью)
-     * Если гены формируются мутацией, то значение гена выбирается случайно в диапазоне [-scale; scale]
-     * Если гены формируются скрещиванием, то ген наследуется случайно от одного из родителей
-     * Шанс передачи гена от родителя определяется параметром crossoverRate
-     * Гены нейронной сети - это веса её нейронов
-     */
-    private fun cross(pair: Pair<Individual, Individual>): Individual {
-        val firstParent = pair.first.nw
-        val secondParent = pair.second.nw
-        val firstParentGens = extractWeights(firstParent)
-        val secondParentGens = extractWeights(secondParent)
-        val childGens = firstParentGens.mapIndexed { l, layer ->
-            layer.mapIndexed { n, neuron -> neuron.mapIndexed { w, gen ->
-                if (random.nextDouble() < mutantRate) {
-                    Math.round((2*random.nextDouble()-1)*scale*10)/10.0
-                } else gen.takeIf { random.nextDouble() < crossoverRate } ?: secondParentGens[l][n][w] }
-            }
+    private fun selection(population: List<Individual>): List<Pair<Individual, Individual>> {
+        val size = population.size
+        val s = size*(size + 1.0)
+        var rangs = population.asReversed().mapIndexed { index, individual ->
+            individual to 2*(index+1)/s
         }
-        return Individual(generateNet(childGens))
+        var rangCounter = 0.0
+        rangs = rangs.map {
+            rangCounter += it.second
+            it.first to rangCounter
+        }
+        return (0 until population.size).map {
+            val p1 = random.nextDouble()
+            val p2 = random.nextDouble()
+            val select = { p: Double -> rangs.filter { it.second > p }.random().first }
+            select(p1) to select(p2)
+        }
     }
 
-    /**
-     * Создаёт нейронную сеть на основе списка весов, упакованных следующим образом:
-     * [ уровень_слоя [ уровень_нейрона [ уровень_веса ] ]
-     * Проходим по каждому уровню и заполняем сеть
-     */
-    private fun generateNet(layerWeights: List<List<List<Double>>>): Network {
-        val nw = createNet()
-        layerWeights.forEachIndexed { layerPosition, neuronsWeights ->
-            val layer = nw.layers[layerPosition]
-            layer.neurons.forEachIndexed { index, neuron ->
-                neuron.weights = neuronsWeights[index].toMutableList()
+    private fun getCrossoverRate(parents: Pair<Individual, Individual>) = if (parents.first.rate < parents.second.rate) {
+        0.5 + 0.2*random.nextDouble()
+    } else {
+        0.5 - 0.2*random.nextDouble()
+    }
+
+    private fun cross(parents: Pair<Individual, Individual>): Network {
+        val crossoverRate = getCrossoverRate(parents)
+        val nw = parents.first.nw.clone()
+        trainLayers.forEach { l ->
+            val layer = nw.layers[l]
+            val neurons = layer.neurons
+            for (i in 0 until neurons.size) {
+                if (random.nextDouble() > crossoverRate) {
+                    neurons[i] = parents.second.nw.layers[l].neurons[i]
+                }
             }
         }
         return nw
     }
 
-    /** Извлекаем веса нейронной сети и упаковываем их специальным образом */
-    private fun extractWeights(nw: Network) = nw.layers.map { it.neurons.map { it.weights.toList() } }
-
-    /** соревнование двух сетей, на выходе начисляются очки */
-    abstract fun play(a: Network, b: Network): Int
-
-    /** определяет усреднённое различие между сетями **/
-    fun netsDifferent(nets: List<Network>): Double {
-        val extractWeights: (Network) -> List<Double> = {
-            nw: Network -> nw.layers.flatMap { it.neurons }.flatMap { it.weights }
-        }
-        val bestWeights = extractWeights(nets.first())
-        val difs = mutableListOf<Double>()
-        (1 until nets.size).map { nets[it] }.forEach {
-            val weights = extractWeights(it)
-            var difsCount = 0
-            weights.forEachIndexed { i, w ->
-                if (w != bestWeights[i]) difsCount++
+    private fun mutate(net: Network): Network {
+        val nw = net.clone()
+        for (l in trainLayers) {
+            val layer = nw.layers[l]
+            for (neuron in layer.neurons) {
+                if (random.nextDouble() < mutateRate) {
+                    val weights = neuron.weights
+                    val n = Random().nextInt(max(1.0, genMutateRate * weights.size).toInt())
+                    for (i in (0..n)) {
+                        weights[Random().nextInt(weights.size)] = (1 - 2 * random.nextDouble()) * scale
+                    }
+                }
             }
-            difs.add(difsCount*1.0/bestWeights.size)
         }
-        return difs.average()
+        return nw
     }
+}
+
+private fun <E> List<E>.random() = get(Random().nextInt(size))
+
+class CheckerEvolution(maxMutateRate: Double=0.1, scale: Int=1) : NetEvolution(maxMutateRate, scale)
+
+fun main(args: Array<String>) {
+    //buildNetwork(Random().nextInt(4)+2, Random().nextInt(4)+2, Random().nextInt(4)+2, Random().nextInt(20)+4, 1) }.toSet()
+    val evolution = CheckerEvolution().apply {
+        mutantStrategy = {epoch, epochSize -> if (epoch < 50) (epochSize-epoch*1.0)/epochSize else 0.1 } }
+//    evolution.evolute(15, List(32) { buildNetwork(3, 5, 7, 40, 1) }.toSet(), 15.0)
+    evolution.evolute(1000, List(31) { buildNetwork(3, 5, 7, 40, 1) }.toSet().union(listOf(CNetwork().load("nets/win.net")!!)), 15.0)
 }
