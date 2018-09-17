@@ -92,7 +92,7 @@ fun white(state: Checkerboard, white: Network) = agent(state, 0, white)
 fun black(state: Checkerboard, black: Network) = agent(state, 1, black)
 
 fun agent(state: Checkerboard, color: Int, nw: Network): Checkerboard? {
-    val nodes = alphaBetaSearch(Node(state, color = color, nw = nw)) ?: return null
+    val nodes = alphaBetaSearch(Node(state, color)) ?: return null
     val pairs = nodes.map { it to nw.activate(it.state, 1.0) }
     val (node, _) = if (color == 0) pairs.maxBy { it.second }!! else pairs.minBy { it.second }!!
     return node.state

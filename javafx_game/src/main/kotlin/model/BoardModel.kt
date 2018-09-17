@@ -10,20 +10,19 @@ import javafx.scene.text.Text
 import javafx.util.Duration
 
 fun bot(state: Checkerboard, color: Int): String {
-    val nodes = alphaBetaSearch(Node(state, color = color))!!
+    val nodes = alphaBetaSearch(Node(state, color))!!
 //    val pairs = nodes.map { it to nw.activate(it.state, 15.0) }
 //    val (node, rate) = if (color == 0) pairs.maxBy { it.second }!! else pairs.minBy { it.second }!!
 //    println("${node.value} [$rate]")
     val node = nodes.random()
     return node.action
 }
-val nw = CNetwork().load("nets/win.net")!!
 
 class BoardModel(private val desk: BoardPane) {
     val fields = mutableMapOf<String, BoardField>()
     val checkers = mutableMapOf<String, BoardChecker>()
     var botColor = 1
-    private var game = GameController()
+    var game = GameController()//.apply { init(listOf("d2", "d4", "h2", "h4"), listOf("b6", "c5", "e7", "f4", "h6")) }
     private var activeFields: Set<String>
     private var availableMoveFields: Set<String>? = null
     private var from: String? = null
@@ -168,10 +167,12 @@ class BoardModel(private val desk: BoardPane) {
 
     /** Возвращает список позиций полей на которых оканчиваются ходы шашки с позицией [position] **/
     private fun getCheckerMoveFields(position: String) = moves
+            .asSequence()
             .filter { it.substring(0, 2) == position }
             .map { it.substring(it.length-2, it.length) }.toSet()
 
     /** Возвращает команду для шашки с позиции [from], которая перемещается на позицию [to] **/
     private fun getCommand(from: String, to: String) = moves
+            .asSequence()
             .filter { it.substring(0, 2) == from }.first { it.substring(it.length - 2, it.length) == to }
 }
