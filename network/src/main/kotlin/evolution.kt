@@ -161,7 +161,7 @@ abstract class NetEvolution(
     }
 }
 
-private fun <E> List<E>.random() = get(Random().nextInt(size))
+fun <E> List<E>.random() = get(Random().nextInt(size))
 
 class CheckerEvolution(maxMutateRate: Double=0.1, scale: Int=1) : NetEvolution(maxMutateRate, scale)
 

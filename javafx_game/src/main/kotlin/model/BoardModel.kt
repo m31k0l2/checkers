@@ -8,12 +8,13 @@ import javafx.scene.shape.Path
 import javafx.scene.text.Font
 import javafx.scene.text.Text
 import javafx.util.Duration
-import java.io.File
+
 fun bot(state: Checkerboard, color: Int): String {
     val nodes = alphaBetaSearch(Node(state, color = color))!!
-    val pairs = nodes.map { it to nw.activate(it.state, 15.0) }
-    val (node, rate) = if (color == 0) pairs.maxBy { it.second }!! else pairs.minBy { it.second }!!
-    println("${node.value} [$rate]")
+//    val pairs = nodes.map { it to nw.activate(it.state, 15.0) }
+//    val (node, rate) = if (color == 0) pairs.maxBy { it.second }!! else pairs.minBy { it.second }!!
+//    println("${node.value} [$rate]")
+    val node = nodes.random()
     return node.action
 }
 val nw = CNetwork().load("nets/win.net")!!
